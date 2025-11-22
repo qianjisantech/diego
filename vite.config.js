@@ -63,7 +63,8 @@ export default defineConfig({
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
-    global: 'globalThis'
+    global: 'globalThis',
+    'import.meta.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL || '')
   },
   optimizeDeps: {
     include: ['tdesign-vue-next', 'tdesign-icons-vue-next'],
