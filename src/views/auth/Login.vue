@@ -400,7 +400,7 @@ const sendEmailCode = async () => {
   }
 
   try {
-    const res = await sendVerificationCode({ email: registerForm.email })
+    const res = await sendVerificationCode(registerForm.email)
     if (res.success || res.code === 200) {
       MessagePlugin.success('验证码已发送，请查收邮箱')
 
