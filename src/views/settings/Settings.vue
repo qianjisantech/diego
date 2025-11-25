@@ -107,7 +107,7 @@
                 <t-input v-model="accountData.name" />
               </t-form-item>
               <t-form-item label="邮箱">
-                <t-input v-model="accountData.email" />
+                <t-input  v-model="accountData.email" disabled />
               </t-form-item>
               <t-form-item label="手机号">
                 <t-input v-model="accountData.phone" />
