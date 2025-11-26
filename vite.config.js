@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import fs from 'fs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -48,7 +49,6 @@ const fixAxiosGlobalPlugin = () => {
 
 // 自定义插件：修复 HTML 中的路径解析问题
 const fixHtmlPathPlugin = () => {
-  const fs = require('fs')
   // 使用与 root 相同的逻辑
   const projectRoot = process.env.VERCEL ? process.cwd() : __dirname
   
