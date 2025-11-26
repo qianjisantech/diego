@@ -16,8 +16,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import OperationLog from '../logs/components/OperationLogTab.vue'
-import TrackingLog from '../logs/components/TrackingLogTab.vue'
+import OperationLog from '../records/components/OperationLogTab.vue'
+import TrackingLog from '../records/components/TrackingLogTab.vue'
 
 const activeTab = ref('operation')
 </script>
