@@ -127,31 +127,47 @@
       </t-form>
     </t-dialog>
 
-    <!-- 分配权限弹窗 -->
-    <t-dialog
+    <!-- 分配权限抽屉 -->
+    <t-drawer
       v-model:visible="showPermissionDialog"
-      header="分配权限"
-      width="600px"
+      title="分配权限"
+      :width="1200"
       :confirm-btn="{ content: '确定', loading: permissionLoading }"
+      class="permission-drawer"
       @confirm="handleConfirmPermission"
+      @cancel="showPermissionDialog = false"
     >
-      <!-- 数据加载中 -->
-      <div v-if="permissionDataLoading" class="dialog-loading">
-        <t-loading size="large" text="加载权限数据中..." />
-      </div>
+      <div class="drawer-content-wrapper">
+        <!-- 操作按钮栏 -->
+        <div v-if="!permissionDataLoading" class="drawer-actions">
+          <t-space>
+            <t-button theme="primary" variant="outline" @click="handleSelectAll">
+              全选
+            </t-button>
+            <t-button theme="primary" variant="outline" @click="handleExpandAll">
+              展开全部
+            </t-button>
+          </t-space>
+        </div>
 
-      <!-- 权限树 -->
-      <t-tree
-        v-else
-        v-model="selectedPermissions"
-        :data="menuTreeData"
-        :keys="{ value: 'id', label: 'menuName', children: 'children' }"
-        checkable
-        value-mode="all"
-        expand-all
-        hover
-      />
-    </t-dialog>
+        <!-- 数据加载中 -->
+        <div v-if="permissionDataLoading" class="drawer-loading">
+          <t-loading size="large" text="加载权限数据中..." />
+        </div>
+
+        <!-- 权限树 -->
+        <t-tree
+          v-else
+          v-model="selectedPermissions"
+          v-model:expanded="expandedKeys"
+          :data="menuTreeData"
+          :keys="{ value: 'id', label: 'menuName', children: 'children' }"
+          checkable
+          value-mode="all"
+          hover
+        />
+      </div>
+    </t-drawer>
   </div>
 </template>
 
@@ -250,6 +266,8 @@ const formTitle = computed(() => {
 // 菜单树数据
 const menuTreeData = ref([])
 const selectedPermissions = ref([])
+const expandedKeys = ref([]) // 展开的节点keys
+const expandedKeys = ref([]) // 展开的节点keys
 
 // 加载角色列表
 const loadRoleList = async () => {
@@ -382,7 +400,7 @@ const handleConfirm = async () => {
 const handleAssignPermission = async (row) => {
   currentRole.value = row
 
-  // 立即显示弹窗
+  // 立即显示抽屉
   showPermissionDialog.value = true
   permissionDataLoading.value = true
 
@@ -418,6 +436,38 @@ const handleConfirmPermission = async () => {
   } finally {
     permissionLoading.value = false
   }
+}
+
+// 全选所有权限
+const handleSelectAll = () => {
+  // 递归获取所有节点的ID
+  const getAllNodeIds = (nodes) => {
+    let ids = []
+    nodes.forEach(node => {
+      ids.push(node.id)
+      if (node.children && node.children.length > 0) {
+        ids = ids.concat(getAllNodeIds(node.children))
+      }
+    })
+    return ids
+  }
+  selectedPermissions.value = getAllNodeIds(menuTreeData.value)
+}
+
+// 展开全部节点
+const handleExpandAll = () => {
+  // 递归获取所有节点的ID用于展开
+  const getAllNodeIds = (nodes) => {
+    let ids = []
+    nodes.forEach(node => {
+      ids.push(node.id)
+      if (node.children && node.children.length > 0) {
+        ids = ids.concat(getAllNodeIds(node.children))
+      }
+    })
+    return ids
+  }
+  expandedKeys.value = getAllNodeIds(menuTreeData.value)
 }
 
 onMounted(() => {
@@ -465,8 +515,33 @@ onMounted(() => {
   margin-top: 16px;
 }
 
-// 弹窗加载状态
-.dialog-loading {
+// 抽屉样式
+:deep(.permission-drawer) {
+  .t-drawer__content-wrapper {
+    padding-top: 64px; // 为顶部 Header 预留空间
+  }
+  
+  .t-drawer__body {
+    padding: 0;
+    height: calc(100% - 64px);
+    overflow-y: auto;
+  }
+}
+
+.drawer-content-wrapper {
+  padding: 24px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.drawer-actions {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--td-component-border);
+}
+
+// 抽屉加载状态
+.drawer-loading {
   display: flex;
   align-items: center;
   justify-content: center;
