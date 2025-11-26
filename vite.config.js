@@ -126,10 +126,20 @@ console.log('[Vite Config] 是否在 Vercel:', !!process.env.VERCEL)
 console.log('[Vite Config] process.cwd():', process.cwd())
 console.log('[Vite Config] __dirname:', __dirname)
 
-// 检查 src/main.js 是否存在
+// 检查关键文件是否存在
 const mainJsPath = path.resolve(rootDir, 'src/main.js')
+const logManagementPath = path.resolve(rootDir, 'src/views/logs/LogManagement.vue')
 console.log('[Vite Config] src/main.js 路径:', mainJsPath)
 console.log('[Vite Config] src/main.js 是否存在:', fs.existsSync(mainJsPath))
+console.log('[Vite Config] LogManagement.vue 路径:', logManagementPath)
+console.log('[Vite Config] LogManagement.vue 是否存在:', fs.existsSync(logManagementPath))
+
+// 检查 src/views/logs 目录
+const logsDir = path.resolve(rootDir, 'src/views/logs')
+if (fs.existsSync(logsDir)) {
+  const files = fs.readdirSync(logsDir)
+  console.log('[Vite Config] src/views/logs 目录内容:', files)
+}
 
 export default defineConfig({
   root: rootDir,
@@ -175,11 +185,11 @@ export default defineConfig({
     exclude: ['@stomp/stompjs', 'sockjs-client']
   },
   build: {
-    // 明确指定入口文件
+    commonjsOptions: {
+      include: [/tdesign-vue-next/, /tdesign-icons-vue-next/, /node_modules/]
+    },
     rollupOptions: {
-      input: {
-        main: path.resolve(rootDir, 'index.html')
-      },
+      input: path.resolve(rootDir, 'index.html'),
       output: {
         manualChunks: {
           'tdesign': ['tdesign-vue-next', 'tdesign-icons-vue-next'],
