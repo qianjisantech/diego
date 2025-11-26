@@ -1088,8 +1088,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  max-width: 1400px;
-  margin: 0 auto;
 
   .feedback-header {
     padding: 20px 24px;
