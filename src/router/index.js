@@ -122,6 +122,15 @@ router.beforeEach(async (to, from, next) => {
   const token = Cookies.get('dcp_token')
   const userStore = useUserStore()
 
+  if (to.path === '/') {
+    if (token) {
+      next('/home')
+    } else {
+      next('/login')
+    }
+    return
+  }
+
   // 设置页面标题
   document.title = to.meta?.title ? `${to.meta.title} - Diego` : 'Diego'
 
