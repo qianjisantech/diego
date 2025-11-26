@@ -47,7 +47,7 @@ const fixAxiosGlobalPlugin = () => {
   }
 }
 
-// 自定义插件：修复 HTML 中的路径解析问题
+// 自定义插件：修复路径解析问题（包括别名路径）
 const fixHtmlPathPlugin = () => {
   // 使用与 root 相同的逻辑
   const projectRoot = process.env.VERCEL ? process.cwd() : __dirname
@@ -55,15 +55,37 @@ const fixHtmlPathPlugin = () => {
   return {
     name: 'fix-html-path',
     enforce: 'pre',
-    // 在构建时处理 HTML
-    transformIndexHtml: {
-      enforce: 'pre',
-      transform(html, ctx) {
-        // 在构建时，确保路径正确
-        return html
-      }
-    },
     resolveId(id, importer) {
+      // 处理别名路径 @/xxx
+      if (id.startsWith('@/')) {
+        const relativePath = id.replace('@/', 'src/')
+        const resolved = path.resolve(projectRoot, relativePath)
+        try {
+          if (fs.existsSync(resolved)) {
+            console.log(`[fixHtmlPathPlugin] 别名解析成功: ${id} -> ${resolved}`)
+            return resolved
+          } else {
+            console.warn(`[fixHtmlPathPlugin] 别名路径文件不存在: ${resolved}`)
+            // 尝试其他可能的路径
+            const altPaths = [
+              path.resolve(process.cwd(), relativePath),
+              path.resolve(__dirname, relativePath)
+            ]
+            for (const altPath of altPaths) {
+              if (fs.existsSync(altPath)) {
+                console.log(`[fixHtmlPathPlugin] 在备用路径找到: ${altPath}`)
+                return altPath
+              }
+            }
+            // 即使文件不存在也返回，让 Vite 处理错误
+            return resolved
+          }
+        } catch (e) {
+          console.error(`[fixHtmlPathPlugin] 别名解析错误:`, e)
+          return resolved
+        }
+      }
+      
       // 处理以 /src/ 开头的路径（从 HTML 中导入）
       if (id.startsWith('/src/')) {
         // 移除前导斜杠，转换为相对路径
@@ -98,6 +120,7 @@ const fixHtmlPathPlugin = () => {
           return resolved
         }
       }
+      
       // 处理 src/main.js 这种相对路径
       if (id === 'src/main.js' || id.startsWith('src/')) {
         const resolved = path.resolve(projectRoot, id)
@@ -111,6 +134,7 @@ const fixHtmlPathPlugin = () => {
         }
         return resolved
       }
+      
       // 返回 null 让其他插件处理
       return null
     }
