@@ -34,3 +34,29 @@ export function getTrackingLogById(id) {
     method: 'get'
   })
 }
+
+/**
+ * 统计埋点类型数量（柱状图）
+ * 展示年月日每个埋点类型的量
+ * @param {Object} query 查询条件 { dateType: 'day'|'month'|'year', startDate, endDate }
+ */
+export function getTrackingTypeStats(query) {
+  return request({
+    url: '/tracking/report/event-type-statistics',
+    method: 'post',
+    data: query
+  })
+}
+
+/**
+ * 统计用户活跃量
+ * 展示用户的活跃量
+ * @param {Object} query 查询条件 { dateType: 'day'|'month'|'year', startDate, endDate }
+ */
+export function getTrackingUserStats(query) {
+  return request({
+    url: '/tracking/report/user-activity',
+    method: 'post',
+    data: query
+  })
+}
