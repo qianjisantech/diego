@@ -82,14 +82,17 @@ export const useUserStore = defineStore('user', () => {
       if (res.success || res.code === 200) {
         const data = res.data
 
-        // 保存用户信息
+        // 保存用户信息（保留所有字段，包括 user_code）
         userInfo.value = data.userInfo || data.user_info || {
           id: data.user_info?.id,
           username: data.user_info?.username,
+          name: data.user_info?.name,
           nickname: data.user_info?.nickname,
           email: data.user_info?.email,
           avatar: data.user_info?.avatar,
-          phone: data.user_info?.phone
+          phone: data.user_info?.phone,
+          user_code: data.user_info?.user_code,
+          userCode: data.user_info?.user_code
         }
 
         // 保存菜单

@@ -80,23 +80,6 @@
           <span>未找到相关事项</span>
         </div>
       </div>
-
-      <t-dropdown :min-column-width="100">
-        <div class="user-info">
-          <t-avatar size="32px">{{ userInitial }}</t-avatar>
-          <span class="username">{{ username }}</span>
-          <t-icon name="chevron-down" size="16px" />
-        </div>
-        <t-dropdown-menu>
-          <t-dropdown-item @click="handleUserCenter">
-            个人中心
-          </t-dropdown-item>
-          <t-dropdown-item divider />
-          <t-dropdown-item @click="handleLogout">
-            退出登录
-          </t-dropdown-item>
-        </t-dropdown-menu>
-      </t-dropdown>
     </div>
   </div>
 </template>
@@ -124,8 +107,6 @@ const showSearchResults = ref(false)
 const searchResults = ref([])
 let searchTimeout = null
 
-// 从store获取用户名
-const username = computed(() => userStore.userInfo?.username || 'Admin')
 
 // 通知数据
 const notices = ref([])
@@ -262,9 +243,6 @@ const currentSpaceId = computed({
   }
 })
 
-const userInitial = computed(() => {
-  return username.value.charAt(0).toUpperCase()
-})
 
 // 顶部通知配置：通过环境变量控制
 // 方式1：静态配置（推荐）- 在 .env 或 .env.production 中配置：
@@ -409,25 +387,6 @@ onBeforeUnmount(() => {
   }
 })
 
-const handleUserCenter = async () => {
-  await MessagePlugin.info('个人中心功能开发中')
-}
-
-const handleLogout = async () => {
-  try {
-    // 登出埋点
-    tracking.trackLogout(username.value)
-
-    // 调用 store 的 logout 方法（会调用后端接口并清除前端信息）
-    await userStore.logout()
-    await MessagePlugin.success('已退出登录')
-    // 跳转到登录页
-    router.push('/login')
-  } catch (error) {
-    console.error('退出登录失败:', error)
-    await MessagePlugin.error('退出登录失败，请重试')
-  }
-}
 
 // 处理新建事项
 const handleCreateIssue = async () => {
@@ -828,30 +787,6 @@ const getNoticeTypeClass = (type) => {
         }
       }
     }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      cursor: pointer;
-      border-radius: 12px;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-
-      &:hover {
-        background: var(--color-bg-secondary);
-      }
-
-      .username {
-        font-size: 14px;
-        color: var(--color-text-primary);
-        font-weight: 500;
-      }
-
-      .t-icon {
-        color: var(--color-text-secondary);
-      }
-    }
   }
 }
 
@@ -947,11 +882,6 @@ const getNoticeTypeClass = (type) => {
         }
       }
 
-      .user-info {
-        .username {
-          display: none; // 隐藏用户名，只保留头像
-        }
-      }
     }
   }
 }
@@ -1052,14 +982,6 @@ const getNoticeTypeClass = (type) => {
         }
       }
 
-      .user-info {
-        padding: 4px 8px;
-
-        .t-avatar {
-          width: 28px;
-          height: 28px;
-        }
-      }
     }
   }
 }

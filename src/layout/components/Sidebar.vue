@@ -20,6 +20,24 @@
             <div v-if="menu.badge" class="menu-badge">{{ menu.badge }}</div>
           </div>
         </div>
+
+        <!-- 底部个人中心区域 - 固定在一级菜单底部，始终显示 -->
+        <div class="sidebar-footer" v-show="true">
+          <!-- 通知图标 -->
+          <div class="footer-notification">
+            <t-icon name="notification" size="20px" />
+          </div>
+
+          <!-- 用户头像和弹窗 -->
+          <div class="footer-user-info" @click="showUserCenterPopup = true">
+            <t-avatar size="32px" :image="userAvatar" :alt="username">{{ userInitial }}</t-avatar>
+          </div>
+
+          <!-- 用户中心弹窗 -->
+          <UserCenterPopup
+              v-model:visible="showUserCenterPopup"
+          />
+        </div>
       </div>
 
       <!-- 二级菜单栏 -->
@@ -222,6 +240,8 @@ import CreateViewDialog from './components/CreateViewDialog.vue'
 import CreateFolderDialog from './components/CreateFolderDialog.vue'
 import ChangelogFormDialog from '@/views/changelog/components/ChangelogFormDialog.vue'
 import { eventBus, EVENTS } from '@/utils/eventBus.js'
+import UserCenterPopup from './UserCenterPopup.vue'
+import tracking from '@/utils/tracking'
 
 const router = useRouter()
 const route = useRoute()
@@ -230,6 +250,9 @@ const userStore = useUserStore()
 
 // 定义emit事件
 const emit = defineEmits(['secondary-change'])
+
+// 用户中心弹窗
+const showUserCenterPopup = ref(false)
 
 const activeMenu = ref(route.path)
 const activeFirstMenu = ref('')
@@ -1650,6 +1673,31 @@ const handleDeleteChangelog = (changelog) => {
   })
 }
 
+// 个人中心相关
+const username = computed(() => userStore.userInfo?.username || 'Admin')
+const userInitial = computed(() => {
+  return username.value.charAt(0).toUpperCase()
+})
+
+// Mock头像地址 - 使用外部图片服务（极简风格）
+const userAvatar = computed(() => {
+  // 可以从store中获取，如果没有则使用mock地址
+  if (userStore.userInfo?.avatar) {
+    return userStore.userInfo.avatar
+  }
+  // 使用极简风格的头像
+  // 可以根据用户名生成不同的头像
+  const seed = username.value || 'user'
+  // 使用identicon风格，简单的几何图案
+  return `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`
+})
+
+// 获取弹窗挂载点
+const getPopupAttach = () => {
+  // 使用 nextTick 确保 DOM 已渲染
+  return document.body
+}
+
 // 发布日志表单提交成功
 const handleChangelogFormSuccess = async (result) => {
   showChangelogFormDialog.value = false
@@ -1741,6 +1789,7 @@ onUnmounted(() => {
   transition: width 0.3s ease;
   max-height: calc(100vh - 64px); // 限制最大高度，减去Header高度
   box-sizing: border-box;
+  padding-bottom: 10px; // 为底部个人中心区域预留空间
 
   &:not(.has-secondary) {
     width: 80px;
@@ -1767,6 +1816,8 @@ onUnmounted(() => {
   z-index: 1; // 确保在二级菜单之上
   visibility: visible !important; // 强制可见
   opacity: 1 !important; // 强制不透明
+  position: relative !important; // 为底部区域提供定位上下文，强制设置
+  height: 100% !important; // 确保高度完整
 
   // 有二级菜单时添加右边框
   .sidebar-menus.has-secondary & {
@@ -1775,8 +1826,9 @@ onUnmounted(() => {
 
   .primary-menu-list {
     flex: 1;
-    padding: 8px 6px;
+    padding: 8px 6px 10px 6px !important; // 底部预留10px空间给底部区域，强制设置
     overflow-y: auto;
+    min-height: 0; // 允许 flex 子元素收缩
 
     .primary-menu-item {
       position: relative;
@@ -2098,6 +2150,65 @@ onUnmounted(() => {
     }
   }
 }
+
+// 底部个人中心区域 - 固定在一级菜单底部，始终显示（无论路由如何切换）
+.primary-menu .sidebar-footer {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 80px !important;
+  padding: 12px 0;
+  background: #fff;
+  border-top: 1px solid #e7e7e7;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 10;
+  flex-shrink: 0; // 防止被压缩
+  visibility: visible !important;
+  opacity: 1 !important;
+
+  .footer-notification {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #646a73;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #f5f7fa;
+      color: #1f2329;
+    }
+  }
+
+  .footer-user-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #f5f7fa;
+    }
+
+    :deep(.t-avatar) {
+      cursor: pointer;
+    }
+  }
+}
+
+// 底部区域始终固定在一级菜单，不受二级菜单影响
+// 不需要根据二级菜单调整宽度
 
 // 滑动动画
 .slide-enter-active,

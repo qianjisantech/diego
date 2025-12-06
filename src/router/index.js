@@ -27,6 +27,122 @@ export const staticRoutes = [
     meta: { title: '注册', requiresAuth: false }
   },
   {
+    path: '/enterprise-admin/:id',
+    name: 'EnterpriseAdmin',
+    component: () => import('@/views/enterprise-admin/EnterpriseAdmin.vue'),
+    meta: { title: '企业管理后台', requiresAuth: true },
+    redirect: (to) => {
+      return `/enterprise-admin/${to.params.id}/info`
+    },
+    children: [
+      {
+        path: 'info',
+        name: 'EnterpriseInfo',
+        component: () => import('@/views/enterprise-admin/EnterpriseInfo.vue'),
+        meta: { title: '企业信息', requiresAuth: true }
+      },
+      {
+        path: 'members',
+        name: 'EnterpriseMembers',
+        component: () => import('@/views/enterprise-admin/Members.vue'),
+        meta: { title: '成员', requiresAuth: true }
+      },
+      {
+        path: 'organization',
+        name: 'EnterpriseOrganization',
+        component: () => import('@/views/enterprise-admin/Organization.vue'),
+        meta: { title: '组织架构', requiresAuth: true }
+      },
+      {
+        path: 'custom-fields',
+        name: 'EnterpriseCustomFields',
+        component: () => import('@/views/enterprise-admin/EnterpriseInfo.vue'), // 临时使用同一个组件
+        meta: { title: '自定义字段', requiresAuth: true }
+      },
+      {
+        path: 'enterprise-permissions',
+        name: 'EnterprisePermissions',
+        component: () => import('@/views/enterprise-admin/EnterpriseInfo.vue'), // 临时使用同一个组件
+        meta: { title: '企业权限', requiresAuth: true }
+      },
+      {
+        path: 'project-permissions',
+        name: 'ProjectPermissions',
+        component: () => import('@/views/enterprise-admin/EnterpriseInfo.vue'), // 临时使用同一个组件
+        meta: { title: '项目权限', requiresAuth: true }
+      }
+    ]
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('@/views/admin/Admin.vue'),
+    meta: { title: '管理员后台', requiresAuth: true },
+    redirect: '/admin/dashboard',
+    children: [
+      {
+        path: 'dashboard',
+        name: 'AdminDashboard',
+        component: () => import('@/views/admin/Dashboard.vue'),
+        meta: { title: '仪表盘', requiresAuth: true }
+      },
+      {
+        path: 'rbac/user',
+        name: 'AdminRbacUser',
+        component: () => import('@/views/rbac/user/index.vue'),
+        meta: { title: '用户管理', requiresAuth: true }
+      },
+      {
+        path: 'rbac/role',
+        name: 'AdminRbacRole',
+        component: () => import('@/views/rbac/role/index.vue'),
+        meta: { title: '角色管理', requiresAuth: true }
+      },
+      {
+        path: 'rbac/menu',
+        name: 'AdminRbacMenu',
+        component: () => import('@/views/rbac/menu/index.vue'),
+        meta: { title: '菜单管理', requiresAuth: true }
+      },
+      {
+        path: 'rbac/dict',
+        name: 'AdminRbacDict',
+        component: () => import('@/views/rbac/dict/index.vue'),
+        meta: { title: '字典管理', requiresAuth: true }
+      },
+      {
+        path: 'rbac/config',
+        name: 'AdminRbacConfig',
+        component: () => import('@/views/rbac/config/index.vue'),
+        meta: { title: '配置管理', requiresAuth: true }
+      },
+      {
+        path: 'announcement',
+        name: 'AdminAnnouncement',
+        component: () => import('@/views/announcement/Announcement.vue'),
+        meta: { title: '公告', requiresAuth: true }
+      },
+      {
+        path: 'changelog',
+        name: 'AdminChangelog',
+        component: () => import('@/views/changelog/Changelog.vue'),
+        meta: { title: '发布日志', requiresAuth: true }
+      },
+      {
+        path: 'changelog/detail',
+        name: 'AdminChangelogDetail',
+        component: () => import('@/views/changelog/components/ChangelogDetail.vue'),
+        meta: { title: '发布日志详情', requiresAuth: true, hidden: true }
+      },
+      {
+        path: 'records',
+        name: 'AdminRecords',
+        component: () => import('@/views/records/RecordsManagement.vue'),
+        meta: { title: '记录管理', requiresAuth: true }
+      }
+    ]
+  },
+  {
     path: '/404',
     name: 'NotFound',
     component: () => import('@/views/error/404.vue'),

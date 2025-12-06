@@ -165,8 +165,9 @@ const loadChangelogList = async (autoRedirect = false) => {
       // 如果需要自动跳转且有日志，且当前URL没有id参数，跳转到最新的一个
       if (autoRedirect && changelogList.value.length > 0 && !route.query.id) {
         const latestChangelog = changelogList.value[0]
+        const basePath = route.path.startsWith('/admin') ? '/admin/changelog' : '/changelog'
         router.push({
-          path: '/changelog',
+          path: basePath,
           query: { id: latestChangelog.id }
         })
       }
@@ -263,8 +264,9 @@ const getContentSummary = (content) => {
 
 // 查看详情
 const viewDetail = (id) => {
+  const basePath = route.path.startsWith('/admin') ? '/admin/changelog' : '/changelog'
   router.push({
-    path: '/changelog',
+    path: basePath,
     query: { id }
   })
 }
@@ -334,8 +336,9 @@ const handleFormSuccess = async (result) => {
 
   // 如果是新增操作，可以跳转到新创建的日志详情
   if (!isEdit && result?.data?.id) {
+    const basePath = route.path.startsWith('/admin') ? '/admin/changelog' : '/changelog'
     router.push({
-      path: '/changelog',
+      path: basePath,
       query: { id: result.data.id }
     })
   }

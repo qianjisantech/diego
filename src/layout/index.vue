@@ -231,7 +231,7 @@ onMounted(async () => {
       margin-left: 0 !important;
 
       .layout-content {
-        padding: 8px;
+        padding: 0;
       }
     }
   }
@@ -242,7 +242,7 @@ onMounted(async () => {
   .layout-container {
     .layout-main {
       .layout-content {
-        padding: 4px;
+        padding: 0;
       }
     }
   }

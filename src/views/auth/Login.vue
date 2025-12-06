@@ -104,7 +104,7 @@
         <div class="card-body">
           <!-- 标题文字 -->
           <div class="login-title">
-            <h2 class="title-text">欢迎回来</h2>
+            <h2 class="title-text">登录以继续使用</h2>
           </div>
 
           <!-- 登录方式 Tab -->
@@ -123,9 +123,9 @@
             class="login-form"
             label-width="0"
           >
-            <t-form-item name="username">
+            <t-form-item name="email">
               <t-input
-                v-model="loginForm.username"
+                v-model="loginForm.email"
                 placeholder="邮箱"
                 size="large"
                 clearable
@@ -201,13 +201,13 @@ const loading = ref(false)
 const passwordVisible = ref(false)
 
 const loginForm = reactive({
-  username: '',
+  email: '',
   password: '',
   remember: false
 })
 
 const loginRules = {
-  username: [
+  email: [
     { required: true, message: '请输入邮箱' },
     { type: 'email', message: '请输入正确的邮箱格式' }
   ],
@@ -225,20 +225,18 @@ const handleLogin = async () => {
   loading.value = true
   try {
     await authStore.login({
-      username: loginForm.username,
+      email: loginForm.email,
       password: loginForm.password,
       remember: loginForm.remember
     })
 
     // 登录成功埋点
-    tracking.trackLogin(loginForm.username)
-
-    MessagePlugin.success('登录成功')
+    tracking.trackLogin(loginForm.email)
 
     const redirect = route.query.redirect || '/home'
-    router.push(redirect)
+    await router.push(redirect)
   } catch (error) {
-    MessagePlugin.error(error.message || '登录失败')
+    await MessagePlugin.error(error.message || '登录失败')
   } finally {
     loading.value = false
   }

@@ -100,10 +100,10 @@
     <!-- 主体内容 - 居中卡片 -->
     <div class="register-main">
       <div class="register-card">
-        <!-- 标题文字 -->
+        <!-- Logo和标题 -->
         <div class="card-header">
-          <div class="register-title">
-            <h2 class="title-text">创建账号</h2>
+          <div class="logo-container">
+            <div class="logo-icon">D</div>
           </div>
         </div>
 
@@ -558,18 +558,27 @@ const goToLogin = () => {
       padding: 48px 40px;
       border: 1px solid rgba(0, 0, 0, 0.06);
 
-      // 标题区域
+      // Logo和标题区域
       .card-header {
-        margin-bottom: 24px;
         text-align: center;
+        margin-bottom: 36px;
 
-        .register-title {
-          .title-text {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1d1d1f;
-            margin: 0;
-            letter-spacing: -0.01em;
+        .logo-container {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 64px;
+          height: 64px;
+          background: linear-gradient(135deg, #0052d9 0%, #3e7dff 100%);
+          border-radius: 16px;
+          margin-bottom: 20px;
+          box-shadow: 0 4px 12px rgba(0, 82, 217, 0.2);
+
+          .logo-icon {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.02em;
           }
         }
       }
@@ -836,7 +845,17 @@ const goToLogin = () => {
         padding: 40px 32px;
 
         .card-header {
-          margin-bottom: 24px;
+          margin-bottom: 28px;
+
+          .logo-container {
+            width: 56px;
+            height: 56px;
+            margin-bottom: 16px;
+
+            .logo-icon {
+              font-size: 28px;
+            }
+          }
         }
 
         .card-body {
