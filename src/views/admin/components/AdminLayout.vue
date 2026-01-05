@@ -128,6 +128,15 @@ const menuGroups = [
     ]
   },
   {
+    key: 'enterprise',
+    label: '企业管理',
+    items: [
+      { key: 'enterprises', label: '企业', icon: 'usergroup' },
+      { key: 'projects', label: '项目管理', icon: 'app' },
+      { key: 'members', label: '成员管理', icon: 'usergroup' }
+    ]
+  },
+  {
     key: 'content',
     label: '内容管理',
     items: [
@@ -151,7 +160,7 @@ const menuGroups = [
 
 // 菜单状态
 const activeMenu = ref('dashboard')
-const expandedMenus = ref(['content', 'system'])
+const expandedMenus = ref(['enterprise', 'content', 'system'])
 
 // 处理菜单展开
 const handleMenuExpand = (value) => {
@@ -161,6 +170,9 @@ const handleMenuExpand = (value) => {
 // 路由映射
 const routeMap = {
   'dashboard': '/admin/dashboard',
+  'enterprises': '/admin/enterprises',
+  'projects': '/admin/projects',
+  'members': '/admin/members',
   'announcement': '/admin/announcement',
   'changelog': '/admin/changelog',
   'records': '/admin/records',
@@ -185,6 +197,12 @@ const updateActiveMenu = () => {
   const path = route.path
   if (path.includes('/dashboard')) {
     activeMenu.value = 'dashboard'
+  } else if (path.includes('/enterprises')) {
+    activeMenu.value = 'enterprises'
+  } else if (path.includes('/projects')) {
+    activeMenu.value = 'projects'
+  } else if (path.includes('/members') && path.includes('/admin/members')) {
+    activeMenu.value = 'members'
   } else if (path.includes('/announcement')) {
     activeMenu.value = 'announcement'
   } else if (path.includes('/changelog')) {

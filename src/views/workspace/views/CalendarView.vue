@@ -794,7 +794,6 @@ const handleSaveEvent = () => {
   // TODO: 调用API保存数据
   MessagePlugin.success('保存成功')
   editEventVisible.value = false
-  console.log('保存的事项数据：', editingEvent.value)
 }
 
 // 获取优先级主题

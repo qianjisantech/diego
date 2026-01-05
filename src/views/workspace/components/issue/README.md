@@ -49,7 +49,7 @@ const handleFilterChange = (conditions) => {
 }
 
 const handleFilterConfirm = (conditions) => {
-  console.log('筛选条件已确认:', conditions)
+  '筛选条件已确认:', conditions)
   // 执行筛选逻辑
 }
 </script>

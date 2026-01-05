@@ -10,18 +10,18 @@
               <div class="enterprise-section">
                 <div class="section-title">企业</div>
                 <div
-                  v-for="space in spaceList"
-                  :key="space.id"
+                  v-for="company in companyList"
+                  :key="company.id"
                   class="enterprise-item"
-                  :class="{ 'is-active': activeSpaceId === String(space.id) }"
-                  @click="handleEnterpriseClick(space)"
+                  :class="{ 'is-active': company.isDefault }"
+                  @click="handleEnterpriseClick(company)"
                 >
                   <div class="enterprise-icon">
-                    <t-icon v-if="space.icon" :name="space.icon" size="20px" />
-                    <div v-else class="default-icon">{{ space.name?.charAt(0) || '企' }}</div>
+                    <t-icon v-if="company.icon" :name="company.icon" size="20px" />
+                    <div v-else class="default-icon">{{ (company.companyName  || '企').charAt(0) }}</div>
                   </div>
-                  <span class="enterprise-name">{{ space.name }}</span>
-                  <t-icon v-if="activeSpaceId === String(space.id)" name="check" size="16px" class="check-icon" />
+                  <span class="enterprise-name">{{ company.companyName  }}</span>
+                  <t-icon v-if="company.isDefault" name="check" size="16px" class="check-icon" />
                 </div>
                 <div class="enterprise-item add-enterprise" @click="handleAddEnterprise">
                   <t-icon name="add" size="20px" />
@@ -31,13 +31,9 @@
 
               <!-- 底部操作 -->
               <div class="popup-footer">
-                <div class="footer-item" @click="handleAccountSettings">
+                <div class="footer-item" @click="handlePersonalSettings">
                   <t-icon name="user-setting" size="16px" />
-                  <span>账号设置</span>
-                </div>
-                <div class="footer-item" @click="handlePreferenceSettings">
-                  <t-icon name="setting" size="16px" />
-                  <span>偏好设置</span>
+                  <span>个人设置</span>
                 </div>
                 <div v-if="isAdmin" class="footer-item admin-backend-item" @click="handleAdminBackendFromFooter">
                   <t-icon name="control-platform" size="16px" />
@@ -47,26 +43,23 @@
                   <t-icon name="logout" size="16px" />
                   <span>退出登录</span>
                 </div>
+
               </div>
             </div>
 
             <!-- 右侧二级菜单 -->
             <transition name="slide-right">
               <div v-if="showSecondaryMenu" class="popup-secondary">
-                <div class="secondary-content">
-                  <div class="secondary-item" @click="handleContacts">
-                    <t-icon name="usergroup" size="16px" />
-                    <span>通讯录</span>
-                  </div>
-                  <div class="secondary-item" @click="handleAdminBackend">
-                    <t-icon name="setting" size="16px" />
-                    <span>管理后台</span>
-                  </div>
-                  <div class="secondary-item" @click="handleInviteMembers">
-                    <t-icon name="user-add" size="16px" />
-                    <span>邀请成员</span>
-                  </div>
+              <div class="secondary-content">
+                <div class="secondary-item" @click="handleAdminBackend">
+                  <t-icon name="setting" size="16px" />
+                  <span>管理后台</span>
                 </div>
+                <div class="secondary-item" @click="handleInviteMembers">
+                  <t-icon name="user-add" size="16px" />
+                  <span>邀请成员</span>
+                </div>
+              </div>
               </div>
             </transition>
           </div>
@@ -74,6 +67,12 @@
       </div>
     </transition>
   </teleport>
+  <InviteModal
+    v-model:visible="showInviteModal"
+    :company-id="userStore.selectedCompanyId || currentEnterprise?.id"
+    @opened="(id) => console.log('[UserCenterPopup] invite opened, companyId:', id)"
+    @copied="(link) => console.log('[UserCenterPopup] invite copied:', link)"
+  />
 </template>
 
 <script setup>
@@ -81,8 +80,10 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { getSpaceList } from '@/api/space'
+import { getSelfCompanies, activateCompany } from '@/api/company.js'
 import tracking from '@/utils/tracking'
+import InviteModal from '@/components/InviteModal.vue'
+import { eventBus } from '@/utils/eventBus.js'
 
 const props = defineProps({
   visible: {
@@ -95,6 +96,29 @@ const emit = defineEmits(['update:visible'])
 
 const router = useRouter()
 const userStore = useUserStore()
+const localSelectedCompany = ref('')
+const copySelectedCompany = async () => {
+  const id = userStore.selectedCompanyId || localSelectedCompany.value || window.__selectedCompanyId || ''
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(String(id))
+    } else {
+      const ta = document.createElement('textarea')
+      ta.value = String(id)
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      ta.remove()
+    }
+    await MessagePlugin.success('已复制企业ID: ' + id)
+  } catch (e) {
+    console.error('复制企业ID失败', e)
+    await MessagePlugin.error('复制失败')
+  }
+}
+
+// 邀请弹窗控制
+const showInviteModal = ref(false)
 
 // 用户信息
 const username = computed(() => userStore.userInfo?.username || 'Admin')
@@ -122,27 +146,35 @@ const userAvatar = computed(() => {
 })
 
 // 企业列表
-const spaceList = ref([])
-const activeSpaceId = ref('')
+const companyList = ref([])
+const activeCompanyId = ref('')
 const currentEnterprise = ref(null)
 const showSecondaryMenu = ref(false)
 
 // 加载企业列表
-const loadSpaceList = async () => {
+const loadCompanyList = async () => {
   try {
-    const res = await getSpaceList()
+    const res = await getSelfCompanies()
     if (res.success || res.code === 200) {
-      spaceList.value = res.data || []
+      companyList.value = res.data || []
       // 设置当前激活的企业（如果有）
-      if (spaceList.value.length > 0) {
-        activeSpaceId.value = String(spaceList.value[0].id)
-        currentEnterprise.value = spaceList.value[0]
+      if (companyList.value.length > 0) {
+        // try to find server-designated default company first
+        const defaultCompany = companyList.value.find(c => c.is_default || c.isDefault)
+        const initial = defaultCompany ? defaultCompany : companyList.value[0]
+        activeCompanyId.value = String(initial.id)
+        currentEnterprise.value = initial
         // 确保二级菜单显示（如果弹窗已打开）
         if (props.visible) {
           showSecondaryMenu.value = true
         }
+        // update user store selected company as source of truth
+        try { userStore.setSelectedCompany(initial.id) } catch (e) {}
+        localSelectedCompany.value = String(initial.id)
       }
     }
+
+    console.warn('个人用户弹窗列表',JSON.stringify( companyList.value))
   } catch (error) {
     console.error('获取企业列表失败:', error)
   }
@@ -159,11 +191,40 @@ const handleUserCenter = () => {
   emit('update:visible', false)
 }
 
-// 处理企业点击
-const handleEnterpriseClick = (space) => {
-  activeSpaceId.value = String(space.id)
-  currentEnterprise.value = space
-  showSecondaryMenu.value = true
+// 处理企业点击 - 调用激活接口并切换企业
+const handleEnterpriseClick = async (company) => {
+  try {
+    const res = await activateCompany(company.id)
+      if (res && (res.success || res.code === 200)) {
+      activeCompanyId.value = String(company.id)
+      currentEnterprise.value = company
+      showSecondaryMenu.value = true
+      await MessagePlugin.success('已切换企业，正在刷新系统...')
+      // update user store selected company (this will emit event)
+      try { userStore.setSelectedCompany(company.id) } catch (e) {}
+      // 先关闭弹窗，等待动画完成后刷新页面以让整个系统使用新的企业上下文
+      emit('update:visible', false)
+      setTimeout(() => {
+        try {
+          window.location.reload()
+        } catch (e) {
+          // 如果 reload 失败，退回到路由刷新
+          router.go(0)
+        }
+      }, 180)
+      return
+    }
+    // 回退行为：即使响应非标准也切换本地显示，并更新 user store
+    activeCompanyId.value = String(company.id)
+    currentEnterprise.value = company
+    showSecondaryMenu.value = true
+    try { userStore.setSelectedCompany(company.id) } catch (e) {}
+    try { localSelectedCompany.value = String(company.id) } catch (e) {}
+    emit('update:visible', false)
+  } catch (error) {
+    console.error('激活企业接口失败:', error)
+    await MessagePlugin.error('切换企业失败，请重试')
+  }
 }
 
 // 返回主菜单
@@ -171,21 +232,15 @@ const handleBack = () => {
   showSecondaryMenu.value = false
 }
 
-// 处理新建企业
+// 处理新建企业（在新标签页打开创建页面）
 const handleAddEnterprise = () => {
-  router.push('/space')
+  window.open('/self/enterprise', '_blank')
   emit('update:visible', false)
 }
 
-// 处理账号设置
-const handleAccountSettings = () => {
-  router.push('/settings/account')
-  emit('update:visible', false)
-}
-
-// 处理偏好设置
-const handlePreferenceSettings = () => {
-  router.push('/settings')
+// 处理个人设置
+const handlePersonalSettings = () => {
+  window.open('/profile', '_blank')
   emit('update:visible', false)
 }
 
@@ -227,7 +282,13 @@ const handleAdminBackendFromFooter = () => {
 
 // 处理邀请成员
 const handleInviteMembers = () => {
-  MessagePlugin.info('邀请成员功能开发中')
+  console.log('[UserCenterPopup] handleInviteMembers clicked, currentEnterprise:', currentEnterprise.value)
+  // 先关闭头像弹窗，保证界面只显示邀请模态框
+  emit('update:visible', false)
+  // 等待弹窗关闭动画/DOM 更新后再打开模态框（避免遮罩层遮挡）
+  setTimeout(() => {
+    showInviteModal.value = true
+  }, 120)
 }
 
 
@@ -235,13 +296,13 @@ const handleInviteMembers = () => {
 watch(() => props.visible, (newVal) => {
   if (newVal) {
     // 如果有已存在的企业数据，立即显示二级菜单
-    if (spaceList.value.length > 0) {
-      activeSpaceId.value = String(spaceList.value[0].id)
-      currentEnterprise.value = spaceList.value[0]
+    if (companyList.value.length > 0) {
+      activeCompanyId.value = String(companyList.value[0].id)
+      currentEnterprise.value = companyList.value[0]
       showSecondaryMenu.value = true
     }
     // 异步加载企业列表
-    loadSpaceList()
+    loadCompanyList()
   } else {
     // 关闭弹窗时重置二级菜单
     showSecondaryMenu.value = false
@@ -249,7 +310,11 @@ watch(() => props.visible, (newVal) => {
 }, { immediate: true })
 
 onMounted(() => {
-  loadSpaceList()
+  loadCompanyList()
+})
+// keep localSelectedCompany in sync with store
+watch(() => userStore.selectedCompanyId, (v) => {
+  localSelectedCompany.value = v || localSelectedCompany.value
 })
 </script>
 
@@ -452,7 +517,8 @@ onMounted(() => {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      /* 腾讯云蓝渐变 */
+      background: linear-gradient(135deg, #00A1F1 0%, #0078D7 100%);
       color: #fff;
       flex-shrink: 0;
 

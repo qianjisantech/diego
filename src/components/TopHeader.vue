@@ -31,7 +31,7 @@ const router = useRouter()
 
 // Logo 点击跳转路由
 const logoRoute = computed(() => {
-  return props.isLoggedIn ? '/home' : '/'
+  return props.isLoggedIn ? '/workspace' : '/'
 })
 
 // 返回首页

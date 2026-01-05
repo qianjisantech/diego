@@ -22,14 +22,11 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 
   // 触发显示新建事项对话框
   const triggerCreateIssue = () => {
-    console.log('[workspace store] triggerCreateIssue called, setting showCreateIssueDialog to true')
     showCreateIssueDialog.value = true
-    console.log('[workspace store] showCreateIssueDialog is now:', showCreateIssueDialog.value)
   }
 
   // 关闭新建事项对话框
   const closeCreateIssueDialog = () => {
-    console.log('[workspace store] closeCreateIssueDialog called')
     showCreateIssueDialog.value = false
   }
 

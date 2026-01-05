@@ -60,3 +60,16 @@ export function getTrackingUserStats(query) {
     data: query
   })
 }
+
+/**
+ * 上报埋点数据（使用 /api/tracking/report 接口）
+ * @param {Object} data 埋点数据
+ */
+export function reportTracking(data) {
+  return request({
+    url: '/tracking/report',
+    method: 'post',
+    data,
+    showLoading: false // 埋点请求不显示loading
+  })
+}

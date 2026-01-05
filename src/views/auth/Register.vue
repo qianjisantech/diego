@@ -2,41 +2,7 @@
   <div class="register-container">
     <!-- 左上角Logo -->
     <div class="top-logo">
-      <div class="logo-icon-wrapper">
-        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="48" height="48" rx="10" fill="url(#topLogoGradient)"/>
-          <path d="M14 12 L14 36" stroke="white" stroke-width="3" stroke-linecap="round"/>
-          <path d="M14 12 C14 12, 28 12, 28 24 C28 36, 14 36, 14 36"
-                stroke="white"
-                stroke-width="3"
-                stroke-linecap="round"
-                fill="none"/>
-          <circle cx="20" cy="18" r="1.5" fill="white" opacity="0.9"/>
-          <line x1="23" y1="18" x2="30" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
-          <circle cx="20" cy="24" r="1.5" fill="white" opacity="0.9"/>
-          <line x1="23" y1="24" x2="28" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
-          <circle cx="20" cy="30" r="1.5" fill="white" opacity="0.9"/>
-          <line x1="23" y1="30" x2="30" y2="30" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
-          <path d="M33 14 L35 16 L39 11"
-                stroke="#4CAF50"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                fill="none"
-                opacity="0.95"/>
-          <defs>
-            <linearGradient id="topLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#0052D9"/>
-              <stop offset="50%" stop-color="#0066FF"/>
-              <stop offset="100%" stop-color="#0080FF"/>
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-      <div class="logo-text-wrapper">
-        <div class="logo-title">需求管控系统</div>
-        <div class="logo-subtitle">Diego</div>
-      </div>
+      <AppLogo :clickable="false" />
     </div>
 
     <!-- 背景装饰和插画 - 参考图片风格 -->
@@ -217,6 +183,8 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { register, sendVerificationCode } from '@/api/auth.js'
+import tracking from '@/utils/tracking'
+import AppLogo from '@/components/AppLogo.vue'
 
 const router = useRouter()
 
@@ -315,6 +283,7 @@ const handleSendCode = async () => {
   // 开始发送验证码
   console.log('🔵 开始发送验证码，邮箱:', email)
   codeLoading.value = true
+  const startTime = Date.now()
   try {
     const response = await sendVerificationCode(email)
     console.log('✅ 验证码发送响应:', response)
@@ -323,11 +292,15 @@ const handleSendCode = async () => {
     if (response && response.success === false) {
       // 后端返回失败，拦截器已经显示了错误消息
       console.log('❌ 后端返回失败')
+      const errorMessage = response.message || '发送验证码失败'
+      tracking.trackSendVerificationCode(email, false, errorMessage)
       return
     }
     
     // 发送成功
     console.log('✅ 验证码发送成功')
+    const duration = Date.now() - startTime
+    tracking.trackSendVerificationCode(email, true, null)
     await MessagePlugin.success(response?.message || '验证码已发送，请查收邮箱')
     
     // 开始倒计时
@@ -340,9 +313,12 @@ const handleSendCode = async () => {
     }, 1000)
   } catch (error) {
     console.error('❌ 发送验证码异常:', error)
+    const duration = Date.now() - startTime
+    const errorMessage = error.message || '网络错误，请稍后重试'
+    tracking.trackSendVerificationCode(email, false, errorMessage)
     // 网络错误或其他异常
     if (!error.response) {
-      await MessagePlugin.error(error.message || '网络错误，请稍后重试')
+      await MessagePlugin.error(errorMessage)
     }
   } finally {
     codeLoading.value = false
@@ -381,16 +357,25 @@ const handleRegister = async () => {
 
   // 验证通过后才发送请求
   loading.value = true
+  const startTime = Date.now()
+  const email = registerForm.email.trim()
   try {
-    await register({
-      email: registerForm.email.trim(),
+    const response = await register({
+      email: email,
       code: registerForm.code.trim(),
       password: registerForm.password
     })
+    const duration = Date.now() - startTime
+    // 注册成功埋点
+    tracking.trackRegister(email, true, null)
     // 跳转到登录页
     router.push('/login')
   } catch (error) {
-    MessagePlugin.error(error.message || '注册失败')
+    const duration = Date.now() - startTime
+    const errorMessage = error.message || '注册失败'
+    // 注册失败埋点
+    tracking.trackRegister(email, false, errorMessage)
+    MessagePlugin.error(errorMessage)
   } finally {
     loading.value = false
   }

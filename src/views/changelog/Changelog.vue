@@ -443,7 +443,7 @@ onMounted(() => {
 
           .version-badge {
             padding: 4px 12px;
-            background: linear-gradient(135deg, #0052d9 0%, #3e7dff 100%);
+            background: var(--tencent-blue-gradient);
             color: #fff;
             border-radius: 12px;
             font-size: 13px;

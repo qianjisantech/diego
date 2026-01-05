@@ -42,7 +42,7 @@
 
       <!-- 二级菜单栏 -->
       <transition name="slide">
-        <div v-if="showSecondary" class="secondary-menu" :class="{ 'is-changelog': activeFirstMenu === '/changelog', 'is-workspace': activeFirstMenu === 'workspace' }">
+        <div v-if="showSecondary" class="secondary-menu" :class="{ 'is-workspace': activeFirstMenu === 'workspace' }">
           <!-- 二级菜单顶部返回按钮（仅组织模块显示） -->
           <div v-if="activeFirstMenu === '/space'" class="secondary-footer">
             <t-button
@@ -233,7 +233,7 @@ import {
   updateViewFolder,
   deleteViewFolder
 } from '@/api/workspace'
-import { getSpaceList } from '@/api/space'
+import { getCompanyList } from '@/api/company.js'
 import { getChangelogList, deleteChangelog } from '@/api/changelog'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
 import CreateViewDialog from './components/CreateViewDialog.vue'
@@ -273,23 +273,7 @@ const viewsLoading = ref(false)
 const changelogList = ref([])
 const changelogLoaded = ref(false) // 标记是否已加载过发布日志
 
-// 组织列表（用于默认进入组织设置时带上 spaceId）
-const spaces = ref([])
-const spacesLoaded = ref(false)
-
-const loadSpaces = async () => {
-  if (spacesLoaded.value) return
-  try {
-    const res = await getSpaceList()
-    if (res.success || res.code === 200) {
-      spaces.value = res.data || []
-    }
-  } catch (error) {
-    console.error('[Sidebar] 获取组织列表失败:', error)
-  } finally {
-    spacesLoaded.value = true
-  }
-}
+// 组织相关已移除
 
 // 加载发布日志列表
 const loadChangelogList = async () => {
@@ -406,60 +390,41 @@ const hasPermission = (permission) => {
 const filterMenuByPermission = (menu) => {
   if (!menu) return null
 
-  console.log('[filterMenuByPermission] 处理菜单:', menu.label, '权限:', menu.permission)
-
-  // 一级菜单：始终显示，不管权限如何（只过滤子菜单）
-  // 判断标准：在 rawMenuList 的顶层（通过检查是否是直接子项）
   const isFirstLevelMenu = true // 在 computed 中调用时，第一层都是一级菜单
 
   // 如果有子菜单，递归过滤子菜单
   if (menu.children && Array.isArray(menu.children)) {
-    console.log('[filterMenuByPermission] 菜单有子项:', menu.children.length)
+
     const filteredChildren = menu.children
       .map(child => {
         // 对于子菜单，需要检查权限
         if (child.permission && !hasPermission(child.permission)) {
-          console.log('[filterMenuByPermission] 子菜单无权限，过滤:', child.label)
+
           return null
         }
         return child
       })
       .filter(child => child !== null)
 
-    console.log('[filterMenuByPermission] 过滤后子菜单数量:', filteredChildren.length)
 
     // 一级菜单即使没有可见的子菜单也要显示（让用户知道这个模块存在）
     return { ...menu, children: filteredChildren.length > 0 ? filteredChildren : null }
   }
 
-  // 一级菜单（无子菜单）始终返回
-  console.log('[filterMenuByPermission] 返回一级菜单:', menu.label)
   return menu
 }
 
 // 菜单配置（原始配置，带权限标识）
 // 🔄 改用后端返回的菜单数据，首页保持写死
 const rawMenuList = computed(() => {
-  console.log('🍔🍔🍔 [rawMenuList] 重新计算菜单列表')
-  console.log('🍔🍔🍔 [rawMenuList] userStore.sidebarMenus:', userStore.sidebarMenus)
-  console.log('🍔🍔🍔 [rawMenuList] userStore.menus:', userStore.menus)
-
-  // 首页菜单（写死的，始终显示）
-  const homeMenu = {
-    value: '/home',
-    label: '首页',
-    icon: 'home',
-    children: null
-  }
-
-  // 如果后端菜单还未加载，只显示首页
+  // 如果后端菜单还未加载，返回空菜单（首页已移除）
   if (!userStore.sidebarMenus || userStore.sidebarMenus.length === 0) {
-    console.log('🍔🍔🍔 [rawMenuList] 后端菜单未加载，只显示首页')
-    return [homeMenu]
+    console.log('🍔🍔🍔 [rawMenuList] 后端菜单未加载，返回空菜单（首页已移除）')
+    return []
   }
 
-  // 合并首页 + 后端菜单
-  const menuList = [homeMenu, ...userStore.sidebarMenus]
+  // 使用后端返回的侧边栏菜单
+  const menuList = [...userStore.sidebarMenus]
   console.log('🍔🍔🍔 [rawMenuList] 最终菜单列表:', menuList.map(m => m.label))
 
   return menuList
@@ -467,9 +432,6 @@ const rawMenuList = computed(() => {
 
 // 过滤后的菜单列表（根据权限）
 const menuList = computed(() => {
-  console.log('==================== menuList computed 执行 ====================')
-  console.log('[menuList] 当前路由:', route.path)
-  console.log('[menuList] 原始菜单数量:', rawMenuList.value.length)
 
   const filtered = rawMenuList.value
     .map((menu, index) => {
@@ -487,64 +449,16 @@ const menuList = computed(() => {
     console.error('⚠️⚠️⚠️ [menuList] 警告：所有菜单都被过滤了！一级菜单将消失！')
   }
 
-  console.log('================================================================')
-
   return filtered
 })
 
 // 当前二级菜单列表
 const currentSecondaryMenu = computed(() => {
-  // 特殊处理：组织的二级菜单：项目管理 + 成员管理
-  if (activeFirstMenu.value === '/space') {
-    return [
-      {
-        label: '项目管理',
-        value: '/space/projects',
-        path: '/space/projects',
-        icon: 'app'
-      },
-      {
-        label: '成员管理',
-        value: '/space/settings',
-        path: '/space/settings',
-        icon: 'usergroup'
-      }
-    ]
-  }
+  // 组织相关二级菜单已移除
 
-  // 特殊处理：发布日志的二级菜单需要动态生成
+  // 发布日志不再显示二级菜单，直接返回空数组
   if (activeFirstMenu.value === '/changelog') {
-    const items = []
-
-    // 添加"全部日志"菜单项（带新增按钮）
-    items.push({
-      label: '全部日志',
-      path: '/changelog',
-      icon: 'queue',
-      showAddAction: true  // 显示新增按钮
-    })
-
-    // 添加分隔线
-    if (changelogList.value.length > 0) {
-      items.push({ type: 'divider' })
-    }
-
-    // 添加每个发布日志作为菜单项
-    changelogList.value.forEach(log => {
-      items.push({
-        label: `${log.version} - ${log.title}`,
-        value: '/changelog',  // 保持在 changelog 路由
-        path: '/changelog',
-        logId: log.id,  // 用于激活状态判断
-        query: { id: log.id },  // 通过 query 参数传递日志ID
-        indent: true,  // 缩进显示
-        icon: 'file-icon',
-        showLogActions: true,  // 显示编辑/删除按钮
-        logData: log  // 传递完整日志数据（用于操作）
-      })
-    })
-
-    return items
+    return []
   }
 
   // 特殊处理：工作台的二级菜单需要在"我的视图"和"我的事项"之间添加分隔线
@@ -630,29 +544,11 @@ const currentSecondaryMenu = computed(() => {
 
 // 根据当前路由初始化激活状态
 const initActiveMenu = (path) => {
-  console.log('======================== 路由初始化 ========================')
-  console.log('[路由初始化] 当前路径:', path)
-  console.log('[路由初始化] 变化前 - 激活的一级菜单:', activeFirstMenu.value)
-  console.log('[路由初始化] 变化前 - 二级菜单展开:', showSecondary.value)
 
-  if (path === '/home') {
-    activeFirstMenu.value = '/home'
-    showSecondary.value = false
-    console.log('[路由初始化] 匹配到: 首页')
-  } else if (path.startsWith('/workspace')) {
+ if (path.startsWith('/workspace')) {
     activeFirstMenu.value = 'workspace'
     showSecondary.value = true
     console.log('[路由初始化] 匹配到: 工作台')
-  } else if (path === '/space') {
-    // 组织首页：只显示列表，不展示二级菜单
-    activeFirstMenu.value = '/space'
-    showSecondary.value = false
-    console.log('[路由初始化] 匹配到: 组织列表')
-  } else if (path.startsWith('/space/')) {
-    // 组织子页面（如 /space/settings）：展示组织相关二级菜单
-    activeFirstMenu.value = '/space'
-    showSecondary.value = true
-    console.log('[路由初始化] 匹配到: 组织子页面，展示二级菜单')
   } else if (path === '/announcement') {
     activeFirstMenu.value = '/announcement'
     showSecondary.value = false
@@ -671,13 +567,9 @@ const initActiveMenu = (path) => {
     console.log('[路由初始化] 匹配到: 问题反馈')
   } else if (path.startsWith('/changelog')) {
     activeFirstMenu.value = '/changelog'
-    // changelog 路径下（包括详情页）都显示二级菜单
-    showSecondary.value = true
+    // 发布日志不再显示二级菜单
+    showSecondary.value = false
     console.log('[路由初始化] 匹配到: 发布日志')
-    // 确保加载发布日志数据
-    if (!changelogLoaded.value) {
-      loadChangelogList()
-    }
   } else if (path === '/operation-log') {
     activeFirstMenu.value = '/operation-log'
     showSecondary.value = false
@@ -686,9 +578,6 @@ const initActiveMenu = (path) => {
     console.log('[路由初始化] 未匹配到任何菜单，保持当前状态')
   }
 
-  console.log('[路由初始化] 变化后 - 激活的一级菜单:', activeFirstMenu.value)
-  console.log('[路由初始化] 变化后 - 二级菜单展开:', showSecondary.value)
-  console.log('============================================================')
 }
 
 // 初始化
@@ -831,14 +720,6 @@ const getSidebarState = () => {
     currentSecondaryMenuItems: currentSecondaryMenu.value.length
   }
 
-  console.log('======================== 侧边栏状态 ========================')
-  console.log('[当前状态] 激活的一级菜单:', state.activeFirstMenu)
-  console.log('[当前状态] 激活的二级菜单:', state.activeSecondaryMenu)
-  console.log('[当前状态] 二级菜单展开:', state.showSecondary)
-  console.log('[当前状态] 当前路由:', state.currentRoute)
-  console.log('[当前状态] 一级菜单列表:', state.menuList)
-  console.log('[当前状态] 当前二级菜单项数:', state.currentSecondaryMenuItems)
-  console.log('============================================================')
 
   return state
 }
@@ -971,19 +852,7 @@ const handlePrimaryMenuClick = async (menu) => {
 
   activeFirstMenu.value = menu.value
 
-  // 特殊处理：组织菜单始终直接进入组织列表，不展示二级菜单
-  if (menu.value === '/space') {
-    console.log('[一级菜单] 组织 - 直接跳转到: /space，不展示二级菜单')
-    showSecondary.value = false
-    router.push('/space')
-    activeMenu.value = '/space'
-
-    console.log('[最终状态] 激活的一级菜单:', activeFirstMenu.value)
-    console.log('[最终状态] 激活的二级菜单:', activeMenu.value)
-    console.log('[最终状态] 二级菜单展开状态:', showSecondary.value)
-    console.log('[最终状态] 当前路由路径:', route.path)
-    return
-  }
+  // 组织菜单已移除
 
   console.log('[状态变化后] 激活的一级菜单:', activeFirstMenu.value)
 
@@ -1005,13 +874,10 @@ const handlePrimaryMenuClick = async (menu) => {
       router.push('/rbac/user')
       activeMenu.value = '/rbac/user'
     }
-    // 如果是发布日志，跳转到列表页（展示所有日志）
+    // 如果是发布日志，直接跳转，不显示二级菜单
     else if (menu.value === '/changelog') {
-      console.log('[一级菜单] 发布日志 - 跳转到列表页')
-      // 确保加载发布日志数据（如果还没加载）
-      if (!changelogLoaded.value) {
-        await loadChangelogList()
-      }
+      console.log('[一级菜单] 发布日志 - 直接跳转')
+      showSecondary.value = false
       router.push('/changelog')
       activeMenu.value = '/changelog'
     }
@@ -1125,7 +991,6 @@ const handlePrimaryMenuClick = async (menu) => {
     }
   })
 
-  console.log('============================================================')
 }
 
 // 判断菜单项是否激活
@@ -1179,36 +1044,7 @@ const handleSecondaryMenuClick = async (item) => {
   // 使用 path 或 value（兼容两种方式）
   const targetPath = item.path || item.value
 
-  // 组织设置相关菜单（项目管理 / 成员管理）
-  if (targetPath === '/space/settings') {
-    const baseQuery = { ...(item.query || {}) }
-
-    // 保留当前 spaceId
-    const currentId =
-      route.query.spaceId ||
-      route.params.spaceId ||
-      route.query.id ||
-      route.params.id
-
-    if (currentId) {
-      baseQuery.spaceId = currentId
-      router.push({
-        path: targetPath,
-        query: baseQuery
-      })
-    } else {
-      // 没有 spaceId 时，才尝试用第一个组织作为默认
-      await loadSpaces()
-      const list = spaces.value || []
-      if (list.length > 0) {
-        baseQuery.spaceId = list[0].id
-      }
-      router.push({
-        path: targetPath,
-        query: baseQuery
-      })
-    }
-  } else if (item.query) {
+  if (item.query) {
     // 其他带 query 参数的菜单
     router.push({
       path: targetPath,
@@ -1314,12 +1150,13 @@ const loadMyViews = async () => {
   }
 }
 
-// 二级菜单返回按钮（组织模块）
+// 二级菜单返回按钮（通用）
 const handleSecondaryBack = () => {
-  console.log('[二级菜单] 返回组织列表')
+  console.log('[二级菜单] 返回上一级菜单')
   showSecondary.value = false
-  activeMenu.value = '/space'
-  router.push('/space')
+  // 回到工作区默认页
+  activeMenu.value = '/workspace/filter'
+  router.push('/workspace/filter')
 }
 
 // 处理搜索
@@ -1884,11 +1721,11 @@ onUnmounted(() => {
       }
 
       &.is-active {
-        background: linear-gradient(135deg, #f0f5ff 0%, #e6f0ff 100%);
-        color: #0052d9;
+        background: var(--tencent-blue-50);
+        color: var(--tencent-blue-dark);
 
         .t-icon {
-          color: #0052d9;
+          color: var(--tencent-blue-dark);
         }
       }
     }
@@ -1905,11 +1742,7 @@ onUnmounted(() => {
   border-right: 1px solid #e7e7e7;
   position: relative;
 
-  // 发布日志菜单需要更宽，方便展示完整标题
-  &.is-changelog {
-    width: 300px;
-    min-width: 300px;
-  }
+  // 发布日志菜单已移除，不再需要特殊宽度
 
   // 工作台菜单（我的事项）需要更宽
   &.is-workspace {
@@ -2003,16 +1836,16 @@ onUnmounted(() => {
         min-width: 0; // 允许 flex 子元素收缩
       }
 
-      .view-count-badge {
+        .view-count-badge {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         min-width: 22px;
         height: 18px;
         padding: 0 7px;
-        background: #e6f4ff;
+        background: var(--tencent-blue-50);
         border-radius: 10px;
-        color: #0052d9;
+        color: var(--tencent-blue-dark);
         font-size: 11px;
         font-weight: 600;
         margin-left: 4px;
@@ -2092,8 +1925,8 @@ onUnmounted(() => {
           transition: all 0.2s;
 
           &:hover {
-            background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
+            background: rgba(0, 162, 241, 0.06);
+            color: var(--tencent-blue);
           }
 
           &.action-icon-danger {

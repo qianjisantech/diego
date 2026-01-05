@@ -457,7 +457,7 @@ const handlePageSizeChange = (size) => {
             }
 
             &.status-in-progress {
-              background: linear-gradient(135deg, #0052d9 0%, #3e7dff 100%);
+              background: var(--tencent-blue-gradient);
             }
 
             &.status-pending {

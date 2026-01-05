@@ -3,6 +3,7 @@ import { MessagePlugin } from 'tdesign-vue-next'
 import Cookies from 'js-cookie'
 import { useLoadingStore } from '@/store/loading'
 import { objectKeysToSnake, objectKeysToCamel } from './caseConverter'
+import tracking from './tracking'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
@@ -63,7 +64,6 @@ const fetchClientIP = async () => {
 
         if (ip && ip !== 'undefined') {
           clientIP = ip
-          console.log('✅ 获取客户端IP成功:', clientIP, '(来源:', service.url, ')')
           return clientIP
         }
       }
@@ -88,6 +88,25 @@ if (typeof window !== 'undefined') {
 
 request.interceptors.request.use(
   async (config) => {
+    // 记录请求开始时间（用于计算接口调用耗时）
+    config._startTime = Date.now()
+    
+    // 如果是埋点请求，在控制台输出以便调试
+    if (config.url && config.url.includes('/tracking/')) {
+    }
+    
+    // 如果是 /logs 接口，输出详细日志以便排查
+    if (config.url && (config.url.includes('/logs') || config.url.includes('/log'))) {
+      console.warn('⚠️ [HTTP请求] 检测到日志接口调用:', {
+        url: config.url,
+        method: config.method?.toUpperCase(),
+        params: config.params,
+        data: config.data,
+        fullUrl: config.baseURL + config.url,
+        stackTrace: new Error().stack
+      })
+    }
+    
     // 显示组件级加载（优先级更高）
     if (config.componentLoading && config.loadingController) {
       config.loadingController.showLoading(config.loadingText || '正在加载中，请稍等...')
@@ -151,20 +170,38 @@ request.interceptors.response.use(
       loading.hideLoading()
     }
 
+    // 计算接口调用耗时
+    const duration = response.config?._startTime ? Date.now() - response.config._startTime : null
+    const url = response.config?.url || ''
+    const method = response.config?.method?.toUpperCase() || 'GET'
+    const statusCode = response.status
+
     // 【关键配置】将响应数据从下划线转换为小驼峰
     // 后端返回的是下划线格式，前端需要转换为小驼峰
       const success=response.success
-      console.log('✅ response:', response)
 
       if (success){
-          console.log('✅ response:', response)
       }
     const data = response.data
     if (data && typeof data === 'object') {
         if(!data.success){
             MessagePlugin.error(data.message||'系统异常，请联系管理员')
+            // API调用失败埋点（业务失败）
+            if (url && !url.includes('/tracking/')) {
+              tracking.trackApiCall(url, method, false, statusCode, data.message || '系统异常', duration)
+            }
+        } else {
+          // API调用成功埋点
+          if (url && !url.includes('/tracking/')) {
+            tracking.trackApiCall(url, method, true, statusCode, null, duration)
+          }
         }
       return objectKeysToCamel(data)
+    }
+
+    // API调用成功埋点（非JSON响应）
+    if (url && !url.includes('/tracking/')) {
+      tracking.trackApiCall(url, method, true, statusCode, null, duration)
     }
 
     return data
@@ -181,7 +218,19 @@ request.interceptors.response.use(
       loading.hideLoading()
     }
 
-    MessagePlugin.error(error.message || '请求失败')
+    // 计算接口调用耗时
+    const duration = error.config?._startTime ? Date.now() - error.config._startTime : null
+    const url = error.config?.url || ''
+    const method = error.config?.method?.toUpperCase() || 'GET'
+    const statusCode = error.response?.status || null
+    const errorMessage = error.response?.data?.message || error.message || '请求失败'
+
+    // API调用失败埋点（网络错误或HTTP错误）
+    if (url && !url.includes('/tracking/')) {
+      tracking.trackApiCall(url, method, false, statusCode, errorMessage, duration)
+    }
+
+    MessagePlugin.error(errorMessage)
     return Promise.reject(error)
   }
 )

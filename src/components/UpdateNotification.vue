@@ -203,7 +203,7 @@ defineExpose({
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    background: linear-gradient(135deg, #0052d9 0%, #0066ff 100%);
+    background: var(--tencent-blue-gradient);
     color: #fff;
 
     .header-left {

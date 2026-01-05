@@ -8,12 +8,7 @@ import Layout from '@/layout/index.vue'
  * 不需要权限验证的路由
  */
 export const staticRoutes = [
-  // {
-  //   path: '/',
-  //   name: 'Product',
-  //   component: () => import('@/views/product/index.vue'),
-  //   meta: { title: '产品介绍', requiresAuth: false }
-  // },
+
   {
     path: '/login',
     name: 'Login',
@@ -25,6 +20,24 @@ export const staticRoutes = [
     name: 'Register',
     component: () => import('@/views/auth/Register.vue'),
     meta: { title: '注册', requiresAuth: false }
+  },
+  {
+    path: '/enterprise/self',
+    name: 'SelfEnterprises',
+    component: () => import('@/views/enterprise/SelfEnterprises.vue'),
+    meta: { title: '我的企业', requiresAuth: true }
+  },
+  {
+    path: '/self/enterprise',
+    name: 'SelfEnterprisesAlt',
+    component: () => import('@/views/enterprise/SelfEnterprises.vue'),
+    meta: { title: '我的企业', requiresAuth: true }
+  },
+  {
+    path: '/self/enterprise/create',
+    name: 'SelfEnterpriseCreate',
+    component: () => import('@/views/enterprise/SelfEnterprises.vue'),
+    meta: { title: '新建企业', requiresAuth: true }
   },
   {
     path: '/enterprise-admin/:id',
@@ -87,6 +100,24 @@ export const staticRoutes = [
         meta: { title: '仪表盘', requiresAuth: true }
       },
       {
+        path: 'enterprises',
+        name: 'AdminEnterprises',
+        component: () => import('@/views/admin/Enterprises.vue'),
+        meta: { title: '企业', requiresAuth: true }
+      },
+      {
+        path: 'projects',
+        name: 'AdminProjects',
+        component: () => import('@/views/admin/Projects.vue'),
+        meta: { title: '项目管理', requiresAuth: true }
+      },
+      {
+        path: 'members',
+        name: 'AdminMembers',
+        component: () => import('@/views/admin/Members.vue'),
+        meta: { title: '成员管理', requiresAuth: true }
+      },
+      {
         path: 'rbac/user',
         name: 'AdminRbacUser',
         component: () => import('@/views/rbac/user/index.vue'),
@@ -138,7 +169,28 @@ export const staticRoutes = [
         path: 'records',
         name: 'AdminRecords',
         component: () => import('@/views/records/RecordsManagement.vue'),
-        meta: { title: '记录管理', requiresAuth: true }
+        meta: { title: '记录管理', requiresAuth: true, icon: 'chart-line' }
+      }
+    ]
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/profile/Profile.vue'),
+    meta: { title: '个人设置', requiresAuth: true },
+    redirect: '/profile/account',
+    children: [
+      {
+        path: 'account',
+        name: 'ProfileAccount',
+        component: () => import('@/views/profile/Account.vue'),
+        meta: { title: '账号设置', requiresAuth: true }
+      },
+      {
+        path: 'settings',
+        name: 'ProfileSettings',
+        component: () => import('@/views/profile/Settings.vue'),
+        meta: { title: '偏好设置', requiresAuth: true }
       }
     ]
   },
@@ -148,6 +200,14 @@ export const staticRoutes = [
     component: () => import('@/views/error/404.vue'),
     meta: { title: '页面不存在', requiresAuth: false }
   }
+  ,
+  // Invite page - public
+  {
+    path: '/self/invite/:id',
+    name: 'Invite',
+    component: () => import('@/views/invite/Invite.vue'),
+    meta: { title: '邀请加入', requiresAuth: false }
+  }
 ]
 
 /**
@@ -155,46 +215,8 @@ export const staticRoutes = [
  * 这些路由是写死的，不会被动态路由覆盖
  */
 const staticChildRoutes = [
-  {
-    path: '/home',
-    name: 'Home',
-    component: () => import('@/views/home/Home.vue'),
-    meta: {
-      title: '首页',
-      requiresAuth: true,
-      icon: 'dashboard'
-    }
-  },
-  // {
-  //   path: '/logs',
-  //   name: 'LogManagement',
-  //   component: () => import('@/views/logs/RecordsManagement.vue'),
-  //   meta: {
-  //     title: '记录管理',
-  //     requiresAuth: true,
-  //     icon: 'view-module'
-  //   }
-  // },
-  {
-    path: '/space/projects',
-    name: 'SpaceProjects',
-    component: () => import('@/views/space/ProjectManagement.vue'),
-    meta: {
-      title: '项目管理',
-      requiresAuth: true,
-      icon: 'app'
-    }
-  },
-  {
-    path: '/space/settings',
-    name: 'SpaceSettings',
-    component: () => import('@/views/space/SpaceSettings.vue'),
-    meta: {
-      title: '成员管理',
-      requiresAuth: true,
-      icon: 'usergroup'
-    }
-  },
+
+
   {
     path: '/workspace/filter',
     name: 'WorkspaceFilter',
@@ -249,7 +271,8 @@ export const layoutRoute = {
   path: '/workspace',
   name: 'Layout',  // ⚠️ 必须设置 name，否则 addRoute 无法找到父路由
   component: Layout,
-  redirect: '/home',
+  // redirect should point to a concrete child path to avoid redirect loops
+  redirect: '/workspace/filter',
   meta: { requiresAuth: true },
   children: [...staticChildRoutes]
 }
@@ -269,30 +292,21 @@ const router = createRouter({
  * @param {Array} routes - 动态路由数组
  */
 export function addDynamicRoutes(routes) {
-  console.log('[addDynamicRoutes] 开始添加动态路由，数量:', routes.length)
 
   // 将动态路由逐个添加到 layoutRoute（name 为 'Layout'） 下
   routes.forEach((route, index) => {
-    console.log(`[addDynamicRoutes] 添加路由 ${index}:`, route.path, '(name:', route.name, ')')
+
     router.addRoute('Layout', route)  // ⚠️ 使用 Layout 的 name，而不是 path
   })
 
   // 更新 layoutRoute 的 children 引用（用于其他地方读取完整路由列表）
   layoutRoute.children = [...staticChildRoutes, ...routes]
 
-  console.log('[addDynamicRoutes] 动态路由添加完成')
-  console.log('[addDynamicRoutes] 当前所有路由:')
   router.getRoutes().forEach(r => {
     console.log('  -', r.path, '(name:', r.name, ', parent:', r.parent?.name || '无', ')')
   })
 
-  // 🔧 特别检查 /space/settings 路由是否存在
-  const spaceSettingsRoute = router.getRoutes().find(r => r.path === '/space/settings')
-  if (spaceSettingsRoute) {
-    console.log('✅ [addDynamicRoutes] /space/settings 路由已注册:', spaceSettingsRoute)
-  } else {
-    console.error('❌ [addDynamicRoutes] /space/settings 路由未找到！')
-  }
+  // 组织相关路由检查已移除
 }
 
 /**
@@ -320,7 +334,7 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.path === '/') {
     if (token) {
-      next('/home')
+      next('/workspace')
     } else {
       next('/login')
     }
@@ -328,13 +342,13 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // 设置页面标题
-  document.title = to.meta?.title ? `${to.meta.title} - Diego` : 'Diego'
+  document.title = to.meta?.title ? `${to.meta.title} - Cooperise` : 'Cooperise'
 
   if (token) {
     // 已登录
     if (to.path === '/login') {
-      // 如果已登录，访问登录页则跳转到首页
-      next({ path: '/home' })
+      // 如果已登录，访问登录页则跳转到工作区
+      next({ path: '/workspace' })
       return
     }
 
@@ -443,8 +457,8 @@ router.beforeEach(async (to, from, next) => {
         if (from.path !== '/' && from.path !== '/login') {
           next(false)
         } else {
-          // 如果是直接访问，跳转到首页
-          next('/home')
+          // 如果是直接访问，跳转到工作区
+          next('/workspace')
         }
         return
       }
@@ -469,10 +483,12 @@ router.beforeEach(async (to, from, next) => {
 
 /**
  * 全局后置守卫
+ * 注意：页面访问埋点已在 setupTrackingRouter 中处理
  */
 router.afterEach(() => {
   // 可以在这里处理一些全局的后置逻辑
   // 例如：关闭 loading、记录访问日志等
+  // 页面访问埋点已在 tracking.js 的 setupTrackingRouter 中自动处理
 })
 
 export default router

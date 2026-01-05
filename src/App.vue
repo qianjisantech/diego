@@ -25,10 +25,6 @@ onMounted(async () => {
     webp: featureDetection.supportsWebP(),
     touch: featureDetection.supportsTouch()
   }
-  
-  console.log('[App] 浏览器信息:', browserInfo)
-  console.log('[App] 特性支持:', features)
-  
   // 添加浏览器类名到 body，方便 CSS 针对性处理
   if (browserInfo.isIE) {
     document.body.classList.add('browser-ie')

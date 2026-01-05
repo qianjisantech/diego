@@ -354,7 +354,7 @@ onUnmounted(() => {
   bottom: 24px;
   right: 24px;
   width: 380px;
-  background: linear-gradient(135deg, #0052d9 0%, #0043b5 100%);
+  background: var(--tencent-blue-gradient);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 82, 217, 0.25);
   color: white;

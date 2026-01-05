@@ -334,7 +334,6 @@ const initColumnConfig = async () => {
 
     if (savedConfig) {
       selectedColumnKeys.value = savedConfig
-      console.log('[TableView] 从IndexedDB加载列配置:', selectedColumnKeys.value)
     } else {
       // 如果 IndexedDB 中没有，尝试从 localStorage 迁移
       const localStorageValue = localStorage.getItem(storageKey)

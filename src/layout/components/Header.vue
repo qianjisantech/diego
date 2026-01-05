@@ -2,16 +2,7 @@
   <div class="header-container">
     <div class="header-left">
       <AppLogo :clickable="true" />
-      <template v-if="isSpaceSettings">
-        <t-select
-          v-model="currentSpaceId"
-          :options="spaceOptions"
-          size="medium"
-          placeholder="选择组织"
-          class="space-switch-select"
-        />
-      </template>
-      <h2 v-else class="page-title">{{ pageTitle }}</h2>
+      <h2 class="page-title">{{ pageTitle }}</h2>
     </div>
 
     <!-- 滚动通知 -->
@@ -90,11 +81,9 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { useWorkspaceStore } from '@/store/workspace'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { getBannerNotifications } from '@/api/notification'
 import { searchIssues } from '@/api/workspace'
-import tracking from '@/utils/tracking'
+
 import AppLogo from '@/components/AppLogo.vue'
-import { getSpaceList } from '@/api/space'
 
 const router = useRouter()
 const route = useRoute()
@@ -140,11 +129,7 @@ let websocket = null
 let reconnectTimeout = null
 let heartbeatInterval = null
 
-// 当前是否为组织设置页面
-const isSpaceSettings = computed(() => route.path === '/space/settings')
-
-// 组织列表（来自 /space/list 接口）
-const spaces = ref([])
+// 组织相关已移除
 
 // 页面标题映射
 const pageTitleMap = {
@@ -159,7 +144,6 @@ const pageTitleMap = {
   '/rbac/dict': '字典管理',
   '/rbac/config': '配置管理',
   // 其他一级菜单
-  '/space': '组织',
   '/announcement': '公告',
   '/feedback': '问题反馈',
   '/changelog': '发布日志',
@@ -183,10 +167,6 @@ const getSettingsTitle = (path) => {
 }
 
 const pageTitle = computed(() => {
-  // 组织设置页面不显示固定标题，改为组织下拉框
-  if (isSpaceSettings.value) {
-    return ''
-  }
   // 如果是设置页面，使用特殊处理
   if (route.path.startsWith('/settings')) {
     return getSettingsTitle(route.path)
@@ -211,37 +191,7 @@ const pageTitle = computed(() => {
   return '工作台'
 })
 
-// 组织下拉：组织列表（来自接口数据）
-const spaceOptions = computed(() => {
-  const list = spaces.value || []
-  return list.map(space => ({
-    label: space.name,
-    value: String(space.id)
-  }))
-})
-
-// 当前选择的组织 ID（字符串形式，方便和下拉绑定）
-const currentSpaceId = computed({
-  get() {
-    const idFromQuery = route.query.spaceId || route.query.id
-    const idFromParam = route.params.spaceId || route.params.id
-    const id = idFromQuery || idFromParam
-    if (id) return String(id)
-
-    // 如果路由上没有组织ID，fallback 到第一个组织
-    const list = spaces.value || []
-    return list.length > 0 ? String(list[0].id) : ''
-  },
-  set(val) {
-    if (!val) return
-    router.push({
-      path: '/space/settings',
-      query: {
-        spaceId: val
-      }
-    })
-  }
-})
+// 组织相关已移除
 
 
 // 顶部通知配置：通过环境变量控制
@@ -347,25 +297,7 @@ const closeWebSocket = () => {
   }
 }
 
-// 加载组织列表
-const loadSpaces = async () => {
-  try {
-    const res = await getSpaceList()
-    if (res.success || res.code === 200) {
-      spaces.value = res.data || []
 
-      // 如果当前在组织设置页且路由上没有 spaceId，则默认跳到第一个组织
-      if (isSpaceSettings.value && !route.query.spaceId && spaces.value.length > 0) {
-        router.replace({
-          path: '/space/settings',
-          query: { spaceId: spaces.value[0].id }
-        })
-      }
-    }
-  } catch (error) {
-    console.error('[Header] 加载组织列表失败:', error)
-  }
-}
 
 // 组件挂载时初始化通知和组织列表
 onMounted(() => {
@@ -376,8 +308,7 @@ onMounted(() => {
   if (!loadedFromEnv && !webSocketTemporarilyDisabled) {
     initWebSocket()
   }
-  
-  loadSpaces()
+
 })
 
 // 组件卸载时关闭WebSocket
@@ -604,20 +535,20 @@ const getNoticeTypeClass = (type) => {
       }
     }
 
-    // 信息类型 - 蓝色
+    // 信息类型 - 腾讯云蓝
     &.notice-type-info {
-      background: linear-gradient(135deg, #f0f5ff 0%, #e6f0ff 100%);
-      border: 1px solid #c5d8ff;
+      background: var(--tencent-blue-50);
+      border: 1px solid var(--tencent-blue-100);
 
       .notice-icon {
-        color: #0052d9;
+        color: var(--tencent-blue-dark);
       }
 
       .notice-item {
-        color: #0052d9;
+        color: var(--tencent-blue-dark);
 
         &.notice-clickable:hover {
-          color: #003ba8;
+          color: var(--tencent-blue);
         }
       }
     }
@@ -695,7 +626,7 @@ const getNoticeTypeClass = (type) => {
         width: 300px;
 
         .search-input {
-          border-color: #0052d9;
+          border-color: var(--tencent-blue-dark);
         }
       }
 
@@ -745,7 +676,7 @@ const getNoticeTypeClass = (type) => {
             .issue-no {
               font-size: 13px;
               font-weight: 500;
-              color: #0052d9;
+              color: var(--tencent-blue-dark);
             }
 
             .issue-summary {

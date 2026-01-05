@@ -1,4 +1,4 @@
-import { saveTrackingLog } from '@/api/tracking'
+import { saveTrackingLog, reportTracking } from '@/api/tracking'
 import { v4 as uuidv4 } from 'uuid'
 
 /**
@@ -103,6 +103,7 @@ class TrackingSDK {
    */
   async track(data) {
     if (!this.isEnabled) {
+      console.warn('[Tracking] 埋点已禁用，跳过:', data.eventName || data.eventType)
       return
     }
 
@@ -119,16 +120,34 @@ class TrackingSDK {
       pageReferrer: document.referrer || null
     }
 
+    if (trackingData.extraData) {
+      try {
+        const extra = JSON.parse(trackingData.extraData)
+      } catch (e) {
+        console.error('📦 额外数据:', trackingData.extraData)
+      }
+    }
     try {
       // 如果是页面卸载，使用 sendBeacon
       if (data.isUnload) {
         const blob = new Blob([JSON.stringify(trackingData)], { type: 'application/json' })
-        navigator.sendBeacon('/api/tracking/save', blob)
+        navigator.sendBeacon('/api/tracking/report', blob)
       } else {
-        await saveTrackingLog(trackingData)
+        await reportTracking(trackingData)
       }
     } catch (error) {
-      console.error('[Tracking] 埋点发送失败:', error)
+      console.error('❌ [Tracking] 埋点发送失败:', error)
+      console.error('❌ [Tracking] 错误详情:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      })
+      // 如果 report 接口失败，尝试使用 save 接口作为降级方案
+      try {
+        await saveTrackingLog(trackingData)
+      } catch (fallbackError) {
+        console.error('❌ [Tracking] 降级埋点发送也失败:', fallbackError)
+      }
     }
   }
 
@@ -166,6 +185,156 @@ class TrackingSDK {
       eventName: '用户登出',
       eventCategory: '用户行为',
       extraData: JSON.stringify({ username })
+    })
+  }
+
+  /**
+   * 注册埋点
+   */
+  trackRegister(email, success = true, errorMessage = null) {
+    this.track({
+      eventType: 'register',
+      eventName: success ? '用户注册成功' : '用户注册失败',
+      eventCategory: '用户行为',
+      extraData: JSON.stringify({ 
+        email,
+        success,
+        errorMessage: errorMessage || null
+      })
+    })
+  }
+
+  /**
+   * 发送验证码埋点
+   */
+  trackSendVerificationCode(email, success = true, errorMessage = null) {
+    this.track({
+      eventType: 'send_verification_code',
+      eventName: success ? '发送验证码成功' : '发送验证码失败',
+      eventCategory: '用户行为',
+      extraData: JSON.stringify({ 
+        email,
+        success,
+        errorMessage: errorMessage || null
+      })
+    })
+  }
+
+  /**
+   * 忘记密码埋点
+   */
+  trackForgetPassword(email, step, success = true, errorMessage = null) {
+    this.track({
+      eventType: 'forget_password',
+      eventName: `忘记密码-${step}`,
+      eventCategory: '用户行为',
+      extraData: JSON.stringify({ 
+        email,
+        step, // 'request' | 'verify' | 'reset'
+        success,
+        errorMessage: errorMessage || null
+      })
+    })
+  }
+
+  /**
+   * 登录尝试埋点（包括失败）
+   */
+  trackLoginAttempt(email, success = true, errorMessage = null) {
+    this.track({
+      eventType: 'login_attempt',
+      eventName: success ? '登录尝试成功' : '登录尝试失败',
+      eventCategory: '用户行为',
+      extraData: JSON.stringify({ 
+        email,
+        success,
+        errorMessage: errorMessage || null
+      })
+    })
+  }
+
+  /**
+   * 项目/组织创建埋点
+   */
+  trackProjectCreate(projectName, projectId = null, success = true, errorMessage = null) {
+    this.track({
+      eventType: 'project_create',
+      eventName: success ? '创建项目/组织成功' : '创建项目/组织失败',
+      eventCategory: '项目管理',
+      extraData: JSON.stringify({ 
+        projectName,
+        projectId,
+        success,
+        errorMessage: errorMessage || null
+      })
+    })
+  }
+
+  /**
+   * 项目/组织编辑埋点
+   */
+  trackProjectEdit(projectName, projectId, success = true, errorMessage = null) {
+    this.track({
+      eventType: 'project_edit',
+      eventName: success ? '编辑项目/组织成功' : '编辑项目/组织失败',
+      eventCategory: '项目管理',
+      extraData: JSON.stringify({ 
+        projectName,
+        projectId,
+        success,
+        errorMessage: errorMessage || null
+      })
+    })
+  }
+
+  /**
+   * 项目/组织删除埋点
+   */
+  trackProjectDelete(projectName, projectId, success = true, errorMessage = null) {
+    this.track({
+      eventType: 'project_delete',
+      eventName: success ? '删除项目/组织成功' : '删除项目/组织失败',
+      eventCategory: '项目管理',
+      extraData: JSON.stringify({ 
+        projectName,
+        projectId,
+        success,
+        errorMessage: errorMessage || null
+      })
+    })
+  }
+
+  /**
+   * 项目/组织查看埋点
+   */
+  trackProjectView(projectName, projectId) {
+    this.track({
+      eventType: 'project_view',
+      eventName: '查看项目/组织',
+      eventCategory: '项目管理',
+      extraData: JSON.stringify({ 
+        projectName,
+        projectId
+      })
+    })
+  }
+
+  /**
+   * API接口调用埋点
+   */
+  trackApiCall(url, method, success = true, statusCode = null, errorMessage = null, duration = null) {
+    this.track({
+      eventType: 'api_call',
+      eventName: success ? 'API调用成功' : 'API调用失败',
+      eventCategory: '接口调用',
+      extraData: JSON.stringify({ 
+        url,
+        method,
+        success,
+        statusCode,
+        errorMessage: errorMessage || null,
+        duration
+      })
     })
   }
 
@@ -248,34 +417,46 @@ const tracking = new TrackingSDK()
 export function setupTrackingRouter(router) {
   let lastPageUrl = null
   let lastPageTitle = null
+  let lastPageStartTime = Date.now()
 
   router.afterEach((to, from) => {
-    // 如果有上一个页面，记录停留时间
-    if (lastPageUrl && from.path !== '/') {
-      const stayTime = Date.now() - tracking.pageStartTime
-      tracking.track({
-        eventType: 'page_view',
-        eventName: `访问页面: ${lastPageTitle}`,
-        eventCategory: '页面浏览',
-        pageUrl: lastPageUrl,
-        pageTitle: lastPageTitle,
-        pageReferrer: from.path || null,
-        stayTime,
-        loadTime: tracking.pageLoadTime
-      })
-    }
+    // 计算上一个页面的停留时间
+    const currentTime = Date.now()
+    const stayTime = lastPageUrl && from.path !== '/' ? currentTime - lastPageStartTime : 0
 
-    // 重置页面开始时间
-    tracking.pageStartTime = Date.now()
+    // 记录当前页面的访问埋点（立即记录）
+    const pageTitle = to.meta?.title || to.name || document.title || '未知页面'
+    const pageUrl = to.fullPath
+    const pageReferrer = from.path !== '/' ? from.fullPath : null
+
+    tracking.track({
+      eventType: 'page_view',
+      eventName: `访问页面: ${pageTitle}`,
+      eventCategory: '页面浏览',
+      pageUrl: pageUrl,
+      pageTitle: pageTitle,
+      pageReferrer: pageReferrer,
+      routeName: to.name || null,
+      routePath: to.path,
+      routeParams: to.params && Object.keys(to.params).length > 0 ? JSON.stringify(to.params) : null,
+      routeQuery: to.query && Object.keys(to.query).length > 0 ? JSON.stringify(to.query) : null,
+      stayTime: stayTime > 0 ? stayTime : null,
+      loadTime: null // 将在页面加载完成后更新
+    })
+
+    // 更新页面开始时间
+    lastPageStartTime = currentTime
+    tracking.pageStartTime = currentTime
     tracking.pageLoadTime = null
 
-    // 记录当前页面信息
-    lastPageUrl = to.fullPath
-    lastPageTitle = to.meta?.title || document.title
+    // 更新最后访问的页面信息
+    lastPageUrl = pageUrl
+    lastPageTitle = pageTitle
 
     // 等待页面加载完成，记录加载时间
     setTimeout(() => {
-      tracking.pageLoadTime = Date.now() - tracking.pageStartTime
+      const loadTime = Date.now() - tracking.pageStartTime
+      tracking.pageLoadTime = loadTime
     }, 100)
   })
 }

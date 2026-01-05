@@ -55,7 +55,7 @@ import { useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { useWorkspaceStore } from '@/store/workspace'
 import { getUserList } from '@/api/user'
-import { getSpaceList } from '@/api/space'
+import { getCompanyList } from '@/api/company.js'
 import IssueFilter from './components/issue/IssueFilter.vue'
 
 const router = useRouter()
@@ -138,7 +138,7 @@ const fetchUserList = async () => {
 // 加载组织列表
 const fetchSpaceList = async () => {
   try {
-    const res = await getSpaceList()
+    const res = await getCompanyList()
     if (res.success || res.code === 200) {
       spaceList.value = res.data || []
     }

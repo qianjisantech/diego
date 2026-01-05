@@ -29,6 +29,19 @@
   --spacing-lg: 24px;
   --spacing-xl: 32px;
   --spacing-2xl: 48px;
+  /* 腾讯云蓝色变量 */
+  --tencent-blue: #00A1F1;
+  --tencent-blue-dark: #0078D7;
+  --tencent-blue-gradient: linear-gradient(135deg, var(--tencent-blue) 0%, var(--tencent-blue-dark) 100%);
+  --tencent-blue-100: #c5d8ff;
+  --tencent-blue-50: #f0f8ff;
+  /* 站点主色（腾讯云蓝）*/
+  --brand-primary: #0052d9;
+  --brand-primary-dark: #0047b8;
+  /* 兼容旧变量 */
+  --tencent-blue: var(--brand-primary);
+  --tencent-blue-dark: var(--brand-primary-dark);
+  --tencent-blue-gradient: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
   
   color: var(--color-text-primary);
   background-color: var(--color-bg-secondary);

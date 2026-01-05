@@ -168,19 +168,6 @@ const browserInfo = {
   supportsES6: typeof Promise !== 'undefined' && typeof Array.from !== 'undefined'
 };
 
-console.log('[Polyfill] Browser compatibility check:', browserInfo);
-console.log('[Polyfill] Global objects initialized:', {
-  globalThis: typeof globalThis,
-  global: typeof global,
-  Request: typeof globalThis.Request,
-  Response: typeof globalThis.Response,
-  Headers: typeof globalThis.Headers,
-  ObjectAssign: typeof Object.assign,
-  ArrayFrom: typeof Array.from,
-  Promise: typeof Promise,
-  StringIncludes: typeof String.prototype.includes,
-  ArrayIncludes: typeof Array.prototype.includes
-});
 
 // 10. 警告不支持的浏览器
 if (browserInfo.isIE) {

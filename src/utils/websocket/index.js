@@ -97,7 +97,6 @@ class WebSocketClient {
 
       // 连接关闭回调
       onDisconnect: () => {
-        console.log('[WebSocket] 连接已断开')
         this.connected = false
       }
     })
@@ -114,7 +113,6 @@ class WebSocketClient {
       this.client.deactivate()
       this.subscriptions.clear()
       this.connected = false
-      console.log('[WebSocket] 已断开连接')
     }
   }
 
@@ -141,8 +139,6 @@ class WebSocketClient {
     })
 
     this.subscriptions.set(destination, subscription)
-    console.log('[WebSocket] 订阅成功:', destination)
-
     return subscription.id
   }
 
@@ -155,7 +151,6 @@ class WebSocketClient {
     if (subscription) {
       subscription.unsubscribe()
       this.subscriptions.delete(destination)
-      console.log('[WebSocket] 取消订阅:', destination)
     }
   }
 
@@ -174,8 +169,6 @@ class WebSocketClient {
       destination,
       body: JSON.stringify(body)
     })
-
-    console.log('[WebSocket] 发送消息:', destination, body)
   }
 
   /**

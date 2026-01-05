@@ -538,7 +538,7 @@ import { useWorkspaceStore } from '@/store/workspace.js'
 import { useUserStore } from '@/store/user.js'
 import { getIssueList, getIssueDetail, updateIssue, deleteIssue } from '@/api/workspace.js'
 import { getUserList } from '@/api/user.js'
-import { getSpaceList } from '@/api/space.js'
+import { getCompanyList } from '@/api/company.js'
 import IssueDetail from './components/IssueDetail.vue'
 import IssueFormDialog from './components/IssueFormDialog.vue'
 import IssueFilterDrawer from './components/issue/IssueFilterDrawer.vue'
@@ -972,7 +972,7 @@ const fetchUserList = async () => {
 // 获取组织列表
 const fetchSpaceList = async () => {
   try {
-    const res = await getSpaceList()
+    const res = await getCompanyList()
     if (res.success) {
       spaceList.value = res.data || []
     }

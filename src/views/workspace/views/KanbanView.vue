@@ -225,9 +225,6 @@ const filteredKanbanItems = computed(() => {
 // 根据事项数据生成看板列
 const kanbanColumns = computed(() => {
   const issues = filteredIssues.value
-
-  console.log('[看板视图] 筛选后的事项数据:', issues)
-
   return statusColumns.map(column => {
     // 筛选出对应状态的事项
     const items = issues.filter(issue => issue.status === column.status).map(issue => {
@@ -252,9 +249,6 @@ const kanbanColumns = computed(() => {
         spaceKeyword: issue.space_keyword || ''
       }
     })
-
-    console.log(`[看板视图] ${column.name} 列有 ${items.length} 个事项`)
-
     return {
       id: column.id,
       name: column.name,

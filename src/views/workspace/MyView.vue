@@ -139,10 +139,6 @@ const loadIssueData = async (viewConfig, viewType) => {
   try {
     // 解析视图配置为查询参数
     const queryParams = parseViewConfigToQuery(viewConfig)
-
-    console.log('[加载事项数据] 查询参数:', queryParams)
-
-    // 根据视图类型生成不同的事项数据
     let mockIssueData;
     
     // 使用传入的视图类型
@@ -2162,10 +2158,9 @@ const loadIssueData = async (viewConfig, viewType) => {
     }
 
     issueData.value = mockIssueData
-    console.log('[加载事项数据] 成功，共', mockIssueData.total, '条')
   } catch (err) {
     console.error('[加载事项数据] 异常:', err)
-    MessagePlugin.error('加载事项数据失败')
+    await MessagePlugin.error('加载事项数据失败')
   }
 }
 

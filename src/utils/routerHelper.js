@@ -36,38 +36,16 @@ const FIXED_SUB_ROUTES = {
 export function generateRoutes(menus, parentPath = '') {
   const routes = []
 
-  console.log('[generateRoutes] 开始生成路由，菜单数量:', menus?.length)
 
   menus.forEach((menu, index) => {
-    console.log(`[generateRoutes] 处理菜单 ${index}:`, {
-      menuName: menu.menuName,
-      menuType: menu.menuType,
-      visible: menu.visible,
-      status: menu.status,
-      path: menu.path,
-      component: menu.component
-    })
-
-    // 只处理可见的菜单
     if (menu.visible !== 1 || menu.status !== 1) {
-      console.log(`[generateRoutes] 跳过菜单 ${menu.menuName}: visible=${menu.visible}, status=${menu.status}`)
       return
     }
 
     // menuType: 1-目录，2-菜单，3-按钮
     // 只有菜单类型(2)才生成路由
     if (menu.menuType === 2 && menu.path && menu.component) {
-      console.log(`[generateRoutes] 生成路由: ${menu.path}`)
-
-      // 特殊处理：组织相关菜单的组件映射
       let componentPath = menu.component
-      if (menu.path === '/space') {
-        // 组织列表
-        componentPath = 'space/Space'
-      } else if (menu.path === '/space/settings') {
-        // 成员管理页面
-        componentPath = 'space/SpaceSettings'
-      }
 
       const route = {
         path: menu.path,
@@ -99,24 +77,17 @@ export function generateRoutes(menus, parentPath = '') {
           route.children = []
         }
         route.children.push(...fixedSubRoutes)
-        console.log(`[generateRoutes] 为 ${menu.path} 添加了 ${fixedSubRoutes.length} 个固定子路由`)
       }
 
       routes.push(route)
     }
     // 如果是目录(1)，只递归处理子菜单
     else if (menu.menuType === 1 && menu.children && menu.children.length > 0) {
-      console.log(`[generateRoutes] 处理目录 ${menu.menuName}，子菜单数量: ${menu.children.length}`)
       const childRoutes = generateRoutes(menu.children, menu.path || parentPath)
-      console.log(`[generateRoutes] 目录 ${menu.menuName} 生成了 ${childRoutes.length} 个路由`)
-
-      // 🔧 目录类型也可能需要固定子路由
-      // 将固定子路由添加到子路由列表中
       if (menu.path) {
         const fixedSubRoutes = FIXED_SUB_ROUTES[menu.path]
         if (fixedSubRoutes && fixedSubRoutes.length > 0) {
           childRoutes.push(...fixedSubRoutes)
-          console.log(`[generateRoutes] 为目录 ${menu.path} 添加了 ${fixedSubRoutes.length} 个固定子路由`)
         }
       }
 
@@ -124,25 +95,16 @@ export function generateRoutes(menus, parentPath = '') {
     }
   })
 
-  // 🔧 将所有固定子路由作为独立路由添加（兜底方案）
-  // 这样即使父路由不存在，固定子路由也能正常访问
-  console.log('[generateRoutes] 🔧 开始添加固定子路由作为独立路由...')
   Object.entries(FIXED_SUB_ROUTES).forEach(([parentPath, subRoutes]) => {
-    console.log(`[generateRoutes] 处理父路径: ${parentPath}, 子路由数量: ${subRoutes.length}`)
     subRoutes.forEach(subRoute => {
       // 检查该路由是否已经被添加（避免重复）
       const exists = routes.some(r => r.path === subRoute.path)
       if (!exists) {
         routes.push(subRoute)
-        console.log(`[generateRoutes] ✅ 添加独立固定子路由: ${subRoute.path} (name: ${subRoute.name})`)
       } else {
-        console.log(`[generateRoutes] ⚠️ 路由已存在，跳过: ${subRoute.path}`)
       }
     })
   })
-  console.log('[generateRoutes] 🔧 固定子路由添加完成')
-
-  console.log('[generateRoutes] 生成路由完成，总数:', routes.length)
   return routes
 }
 
@@ -288,21 +250,46 @@ export function menusToSidebar(menus) {
 
     // 菜单类型：1-目录，2-菜单，3-按钮（按钮不显示在侧边栏）
     if (menu.menuType === 1 || menu.menuType === 2) {
+      // 默认图标映射（当后端没有返回图标时使用）
+      const defaultIconMap = {
+        '/admin/records': 'chart-line',
+        'records': 'chart-line',
+        '记录管理': 'chart-line',
+        '埋点报表': 'chart-pie',
+        '/operation-log': 'file-text',
+        '操作记录': 'file-text',
+        '埋点记录': 'chart-bar'
+      }
+      
+      // 获取图标：优先使用后端返回的图标，如果没有则使用默认图标
+      let icon = menu.icon
+      if (!icon) {
+        // 根据路径匹配
+        if (menu.path && defaultIconMap[menu.path]) {
+          icon = defaultIconMap[menu.path]
+        }
+        // 根据菜单名称匹配
+        else if (menu.menuName && defaultIconMap[menu.menuName]) {
+          icon = defaultIconMap[menu.menuName]
+        }
+        // 根据菜单代码匹配
+        else if (menu.menuCode && defaultIconMap[menu.menuCode]) {
+          icon = defaultIconMap[menu.menuCode]
+        }
+      }
+      
       const item = {
         // 🔧 修复：目录使用 menuCode，菜单使用 path
         // 目录（menuType=1）不会生成路由，所以不能使用 path，否则会跳转到 404
         // 菜单（menuType=2）有对应的路由，使用 path
         value: menu.menuType === 1 ? menu.menuCode : (menu.path || menu.menuCode),
         label: menu.menuName,
-        icon: menu.icon,
+        icon: icon,
         permission: menu.permission,
         children: null
       }
 
-      // 特殊文案：组织设置二级菜单统一显示为「成员管理」
-      if (menu.path === '/space/settings') {
-        item.label = '成员管理'
-      }
+      // 组织相关菜单已移除
 
       // 递归处理子菜单
       if (menu.children && menu.children.length > 0) {
@@ -341,5 +328,5 @@ export function getDefaultHomePage(menus) {
     return null
   }
 
-  return findFirstMenu(menus) || '/home'
+  return findFirstMenu(menus) || '/workspace/filter'
 }

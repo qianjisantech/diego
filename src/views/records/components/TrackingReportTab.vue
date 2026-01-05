@@ -2,7 +2,13 @@
   <div class="tracking-report-tab">
     <!-- 柱状图：埋点类型统计 -->
     <div class="chart-section">
-      <t-card title="埋点类型统计" class="chart-card">
+      <t-card class="chart-card">
+        <template #header>
+          <div class="card-header-with-icon">
+            <t-icon name="chart-bar" size="20px" class="header-icon" />
+            <span>埋点类型统计</span>
+          </div>
+        </template>
         <!-- 埋点类型统计筛选条件 -->
         <div class="filter-section">
           <t-form layout="inline" @submit="handleTypeStatsSearch">
@@ -32,7 +38,10 @@
         </div>
         <div v-else class="chart-container">
           <div class="chart-header">
-            <div class="chart-title">各埋点类型数量统计</div>
+            <div class="chart-title">
+              <t-icon name="bar-chart" size="18px" class="chart-title-icon" />
+              <span>各埋点类型数量统计</span>
+            </div>
             <div class="chart-legend">
               <span v-for="(item, index) in typeStatsData" :key="index" class="legend-item">
                 <span class="legend-color" :style="{ backgroundColor: getColorByIndex(index) }"></span>
@@ -66,7 +75,13 @@
 
     <!-- 用户活跃量统计 -->
     <div class="user-stats-section">
-      <t-card title="用户活跃量统计" class="stats-card">
+      <t-card class="stats-card">
+        <template #header>
+          <div class="card-header-with-icon">
+            <t-icon name="usergroup" size="20px" class="header-icon" />
+            <span>用户活跃量统计</span>
+          </div>
+        </template>
         <!-- 用户活跃量统计筛选条件 -->
         <div class="filter-section">
           <t-form layout="inline" @submit="handleUserStatsSearch">
@@ -97,15 +112,24 @@
         <div v-else class="user-stats-container">
           <div class="stats-summary">
             <div class="summary-item">
-              <div class="summary-label">总活跃用户</div>
+              <div class="summary-label">
+                <t-icon name="user" size="16px" class="summary-icon" />
+                <span>总活跃用户</span>
+              </div>
               <div class="summary-value">{{ userStatsData.totalUsers || 0 }}</div>
             </div>
             <div class="summary-item">
-              <div class="summary-label">总访问次数</div>
+              <div class="summary-label">
+                <t-icon name="view-module" size="16px" class="summary-icon" />
+                <span>总访问次数</span>
+              </div>
               <div class="summary-value">{{ userStatsData.totalVisits || 0 }}</div>
             </div>
             <div class="summary-item">
-              <div class="summary-label">平均活跃度</div>
+              <div class="summary-label">
+                <t-icon name="chart-line" size="16px" class="summary-icon" />
+                <span>平均活跃度</span>
+              </div>
               <div class="summary-value">{{ userStatsData.avgActivity || 0 }}</div>
             </div>
           </div>
@@ -620,9 +644,24 @@ onMounted(() => {
   .chart-section {
     margin-bottom: 24px;
 
-    .chart-card {
+      .chart-card {
       :deep(.t-card__body) {
         padding: 24px;
+      }
+
+      :deep(.t-card__header) {
+        .card-header-with-icon {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          color: #1f2329;
+
+          .header-icon {
+            color: #0052D9;
+          }
+        }
       }
 
       .filter-section {
@@ -645,9 +684,16 @@ onMounted(() => {
         margin-bottom: 24px;
 
         .chart-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
           font-size: 16px;
           font-weight: 500;
           color: #1f2329;
+
+          .chart-title-icon {
+            color: #0052D9;
+          }
         }
 
         .chart-legend {
@@ -734,6 +780,21 @@ onMounted(() => {
         padding: 24px;
       }
 
+      :deep(.t-card__header) {
+        .card-header-with-icon {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          color: #1f2329;
+
+          .header-icon {
+            color: #0052D9;
+          }
+        }
+      }
+
       .filter-section {
         margin-bottom: 24px;
       }
@@ -756,9 +817,16 @@ onMounted(() => {
 
         .summary-item {
           .summary-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-size: 14px;
             color: #5e6e82;
             margin-bottom: 8px;
+
+            .summary-icon {
+              color: #0052D9;
+            }
           }
 
           .summary-value {

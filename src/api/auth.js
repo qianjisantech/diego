@@ -22,12 +22,7 @@ export function logout() {
   })
 }
 
-export function getPermissions() {
-  return request({
-    url: '/auth/profile',
-    method: 'get'
-  })
-}
+
 
 /**
  * 发送邮箱验证码

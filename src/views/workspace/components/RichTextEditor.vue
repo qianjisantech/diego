@@ -76,7 +76,6 @@ const editorConfig = {
       onInsertedImage(imageNode) {
         if (imageNode == null) return
         const { src, alt, url, href } = imageNode
-        console.log('inserted image', src, alt, url, href)
       },
       // 检查图片插入
       checkImage: (src, alt, url) => {
@@ -89,9 +88,6 @@ const editorConfig = {
       },
       // 自定义上传图片
       customUpload: async (file, insertFn) => {
-        // 这里可以实现图片上传到服务器的逻辑
-        // 暂时不实现，只支持网络图片链接
-        console.log('upload image', file)
       }
     }
   }

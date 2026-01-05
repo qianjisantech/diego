@@ -229,9 +229,6 @@ export function useColumnConfig() {
 
     // 4. 最后添加操作列（固定在最右侧）
     cols.push(operationColumn)
-
-    console.log('[Issue] 当前可见列顺序:', cols.map(c => c.title || c.colKey).join(' -> '))
-
     return cols
   })
 
@@ -247,8 +244,6 @@ export function useColumnConfig() {
         columns.value.forEach(col => {
           col.visible = savedConfig.includes(col.colKey) || col.colKey === 'row-select'
         })
-        console.log('[Issue] 从IndexedDB加载列配置，共', savedConfig.length, '列')
-        console.log('[Issue] 加载的列顺序:', savedConfig.join(' -> '))
       } else {
         // 如果 IndexedDB 中没有，尝试从 localStorage 迁移
         const localStorageValue = localStorage.getItem(COLUMN_CONFIG_KEY)

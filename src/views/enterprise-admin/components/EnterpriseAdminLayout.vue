@@ -144,6 +144,9 @@
         </div>
       </div>
     </t-drawer>
+
+    <!-- 问题反馈悬浮按钮 -->
+    <FeedbackFloatButton />
   </div>
 </template>
 
@@ -151,6 +154,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
+import FeedbackFloatButton from '@/components/FeedbackFloatButton.vue'
 
 const route = useRoute()
 const router = useRouter()

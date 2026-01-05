@@ -1,34 +1,6 @@
 import { ref } from 'vue'
 import request from '@/utils/request'
 
-/**
- * 组件级 Loading 状态管理
- * 用于在组件内部管理 loading 状态，配合 LoadingContainer 组件使用
- *
- * @param {boolean} initialState - 初始 loading 状态，默认为 false
- * @returns {Object} loading 状态和控制方法
- *
- * @example
- * // 基础使用
- * const loading = useLoading()
- * loading.showLoading('加载中...')
- * // ... 执行异步操作
- * loading.hideLoading()
- *
- * @example
- * // 使用 withLoading 自动管理 loading 状态
- * const loading = useLoading()
- * await loading.withLoading(async () => {
- *   const data = await fetchData()
- *   return data
- * }, '正在加载数据...')
- *
- * @example
- * // 使用 createApiCaller 创建带 loading 的 API 调用
- * const loading = useLoading()
- * const apiWithLoading = loading.createApiCaller()
- * const result = await apiWithLoading(() => getIssueList(params), '正在加载事项列表...')
- */
 export function useLoading(initialState = false) {
   const loading = ref(initialState)
   const loadingText = ref('正在加载中，请稍等...')
@@ -64,40 +36,6 @@ export function useLoading(initialState = false) {
     }
   }
 
-  /**
-   * 创建一个 API 调用包装器
-   * 自动将 loading 控制器注入到 request 配置中
-   * 这样 request 拦截器会自动管理 loading 状态
-   *
-   * @returns {Function} API 调用包装函数
-   *
-   * @example
-   * // 方式 1: 包装已定义的 API 函数
-   * const apiCaller = loading.createApiCaller()
-   * const data = await apiCaller(() => getIssueList(params), '正在加载事项列表...')
-   *
-   * @example
-   * // 方式 2: 包装自定义 request 调用
-   * const apiCaller = loading.createApiCaller()
-   * const data = await apiCaller(() => request({
-   *   url: '/api/custom',
-   *   method: 'get'
-   * }), '正在加载数据...')
-   *
-   * @example
-   * // 方式 3: 直接使用 request，手动指定 componentLoading
-   * // 需要在 API 定义中修改：
-   * export function getIssueList(data, loadingController) {
-   *   return request({
-   *     url: '/workspace/issue/page',
-   *     method: 'post',
-   *     data,
-   *     componentLoading: true,
-   *     loadingController,
-   *     loadingText: '正在加载事项列表...'
-   *   })
-   * }
-   */
   const createApiCaller = () => {
     /**
      * @param {Function} apiFn - API 调用函数，应该返回一个 Promise

@@ -139,13 +139,6 @@ const initColumns = () => {
     // 将 fixed 属性标准化为布尔值（TDesign Table 的 fixed 可能是 'left'/'right'/true/false）
     fixed: !!item.fixed
   }))
-
-  console.log('======================== 列配置调试信息 ========================')
-  console.log('[ColumnConfigDrawer] transferData 数量:', props.transferData.length)
-  console.log('[ColumnConfigDrawer] transferData 字段列表:', props.transferData.map(item => item.value))
-  console.log('[ColumnConfigDrawer] selectedColumnKeys 数量:', props.selectedColumnKeys.length)
-  console.log('[ColumnConfigDrawer] selectedColumnKeys:', props.selectedColumnKeys)
-
   shownColumns.value = allColumns.filter(item =>
     props.selectedColumnKeys.includes(item.value)
   )
@@ -169,12 +162,7 @@ const initColumns = () => {
     !props.selectedColumnKeys.includes(item.value)
   )
 
-  console.log('[ColumnConfigDrawer] 已显示字段数量:', shownColumns.value.length)
-  console.log('[ColumnConfigDrawer] 已显示字段:', shownColumns.value.map(item => item.label))
-  console.log('[ColumnConfigDrawer] 固定字段:', fixedCols.map(item => item.label))
-  console.log('[ColumnConfigDrawer] 未显示字段数量:', hiddenColumns.value.length)
-  console.log('[ColumnConfigDrawer] 未显示字段:', hiddenColumns.value.map(item => item.label))
-  console.log('================================================================')
+
 }
 
 // 过滤后的已展示列

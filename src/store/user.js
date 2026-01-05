@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { eventBus } from '@/utils/eventBus.js'
 import Cookies from 'js-cookie'
-import { login as loginApi, getPermissions as getPermissionsApi, logout as logoutApi, getUserInfo as getUserInfoApi } from '@/api/auth'
+import { login as loginApi, getUserInfo as getUserInfoApi, logout as logoutApi } from '@/api/auth'
 import { generateRoutes, menusToSidebar, getDefaultHomePage } from '@/utils/routerHelper'
 import { useWorkspaceStore } from './workspace'
+import { getSelfCompanies } from '@/api/company.js'
 
 export const useUserStore = defineStore('user', () => {
   const userInfo = ref(null)
@@ -11,6 +13,7 @@ export const useUserStore = defineStore('user', () => {
   const menuPermissions = ref([])
   const dataPermissions = ref(null)
   const userSpaces = ref([])
+  const selectedCompanyId = ref('')
   const roles = ref([]) // 用户角色
   const permissionsLoaded = ref(false) // 权限是否已加载
   const permissionsLoading = ref(false) // 权限是否正在加载中
@@ -41,46 +44,14 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  const getPermissions = async () => {
-    // 如果权限已经加载或正在加载中，直接返回
-    if (permissionsLoaded.value || permissionsLoading.value) {
-      return
-    }
-
-    permissionsLoading.value = true
-
-    try {
-      const res = await getPermissionsApi()
-      if (res.success) {
-        // 更新用户基本信息（非常重要！兼容驼峰和下划线命名）
-        if (res.data.userInfo || res.data.user_info) {
-          userInfo.value = res.data.userInfo || res.data.user_info
-        }
-        // 更新权限信息（兼容驼峰和下划线命名）
-        menuPermissions.value = res.data.menuPermissions || res.data.menu_permissions || []
-        dataPermissions.value = res.data.dataPermissions || res.data.data_permissions || null
-        userSpaces.value = res.data.spaces || []
-        permissionsLoaded.value = true // 标记权限已加载
-        return res
-      } else {
-        throw new Error(res.message || '获取权限失败')
-      }
-    } catch (error) {
-      // 即使加载失败，也标记为已完成，避免一直卡在加载状态
-      permissionsLoaded.value = true
-      throw error
-    } finally {
-      permissionsLoading.value = false
-    }
-  }
 
   // 获取用户信息和菜单（用于动态路由）
   const fetchUserInfo = async () => {
     try {
-      // 使用现有的 getPermissionsApi，它调用 /auth/profile 接口
-      const res = await getPermissionsApi()
-      if (res.success || res.code === 200) {
-        const data = res.data
+      // use getUserInfo to fetch profile and related permission/menu data
+      const res = await getUserInfoApi()
+      if (res && (res.success || res.code === 200)) {
+        const data = res.data || res
 
         // 保存用户信息（保留所有字段，包括 user_code）
         userInfo.value = data.userInfo || data.user_info || {
@@ -104,8 +75,34 @@ export const useUserStore = defineStore('user', () => {
         // 保存角色
         roles.value = data.roles || []
 
-        // 保存组织
-        userSpaces.value = data.spaces || []
+        // 保存组织（兼容 profile 返回的 companies 字段）
+        userSpaces.value = data.companies || data.spaces || []
+        // 如果后端返回组织列表并且未设置 selectedCompanyId，优先通过控制台接口查找 is_default 为 true 的企业
+        if ((!selectedCompanyId.value || selectedCompanyId.value === '') && Array.isArray(userSpaces.value) && userSpaces.value.length > 0) {
+          try {
+            const resCompanies = await getSelfCompanies()
+            const companies = (resCompanies?.data) || (Array.isArray(resCompanies) ? resCompanies : [])
+            const defaultCompany = Array.isArray(companies) ? companies.find(c => c.is_default || c.isDefault) : null
+            if (defaultCompany && defaultCompany.id) {
+              selectedCompanyId.value = String(defaultCompany.id)
+              try { eventBus.emit('company:changed', selectedCompanyId.value) } catch (e) {}
+
+            } else {
+              const defaultSpace = userSpaces.value.find(s => s.is_default || s.isDefault) || userSpaces.value[0]
+              if (defaultSpace?.id) {
+                selectedCompanyId.value = String(defaultSpace.id)
+                try { eventBus.emit('company:changed', selectedCompanyId.value) } catch (e) {}
+              }
+            }
+          } catch (e) {
+            // fallback to userSpaces if API call fails
+            const defaultSpace = userSpaces.value.find(s => s.is_default || s.isDefault) || userSpaces.value[0]
+            if (defaultSpace?.id) {
+              selectedCompanyId.value = String(defaultSpace.id)
+              try { eventBus.emit('company:changed', selectedCompanyId.value) } catch (err) {}
+            }
+          }
+        }
 
         // 生成路由配置
         routes.value = generateRoutes(menus.value)
@@ -115,9 +112,6 @@ export const useUserStore = defineStore('user', () => {
 
         // 标记权限已加载
         permissionsLoaded.value = true
-
-        console.log('[fetchUserInfo] 菜单数据:', menus.value)
-        console.log('[fetchUserInfo] 生成的路由:', routes.value)
 
         return data
       } else {
@@ -129,9 +123,70 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  // 兼容老代码：提供 getPermissions 方法（用于路由守卫中调用）
+  const getPermissions = async () => {
+    if (permissionsLoaded.value) {
+      return {
+        menus: menus.value,
+        menuPermissions: menuPermissions.value,
+        routes: routes.value
+      }
+    }
+    if (permissionsLoading.value) {
+      // 如果正在加载，等待短暂轮询直到加载完成或超时
+      return new Promise((resolve, reject) => {
+        const start = Date.now()
+        const interval = setInterval(() => {
+          if (permissionsLoaded.value) {
+            clearInterval(interval)
+            resolve({
+              menus: menus.value,
+              menuPermissions: menuPermissions.value,
+              routes: routes.value
+            })
+          } else if (Date.now() - start > 5000) {
+            clearInterval(interval)
+            reject(new Error('获取权限超时'))
+          }
+        }, 100)
+      })
+    }
+
+    try {
+      permissionsLoading.value = true
+      const data = await fetchUserInfo()
+      permissionsLoading.value = false
+      permissionsLoaded.value = true
+      return {
+        menus: menus.value,
+        menuPermissions: menuPermissions.value,
+        routes: routes.value,
+        raw: data
+      }
+    } catch (error) {
+      permissionsLoading.value = false
+      throw error
+    }
+  }
+
   // 设置路由加载状态
   const setRoutesLoaded = (loaded) => {
     routesLoaded.value = loaded
+  }
+
+  const setSelectedCompany = (id) => {
+    if (!id) return
+    selectedCompanyId.value = String(id)
+    try {
+      eventBus.emit('company:changed', selectedCompanyId.value)
+    } catch (e) {}
+    try { localStorage.setItem('activeCompanyId', String(selectedCompanyId.value)) } catch (e) {}
+    // log whenever selected company changes
+    // eslint-disable-next-line no-console
+    console.log('selectedCompanyId.value:', selectedCompanyId.value)
+    console.log('userStore.selectedCompanyId:', userStore.selectedCompanyId)
+    // expose to global for debug/externals
+    try { window.__selectedCompanyId = selectedCompanyId.value } catch (e) {}
   }
 
   const logout = async () => {
@@ -180,7 +235,7 @@ export const useUserStore = defineStore('user', () => {
 
   // 默认首页路径（固定为首页）
   const defaultHomePage = computed(() => {
-    return '/home'
+    return '/workspace'
   })
 
   return {
@@ -199,14 +254,16 @@ export const useUserStore = defineStore('user', () => {
     routes,
     sidebarMenus,
     routesLoaded,
+    selectedCompanyId,
+    setSelectedCompany,
 
     // 计算属性
     defaultHomePage,
 
     // 方法
     login,
-    getPermissions,
     fetchUserInfo,
+    getPermissions,
     setRoutesLoaded,
     logout,
     hasMenuPermission,

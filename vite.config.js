@@ -65,7 +65,7 @@ const fixHtmlPathPlugin = () => {
         // 检查文件是否存在
         try {
           if (fs.existsSync(resolved)) {
-            console.log(`[fixHtmlPathPlugin] 别名解析成功: ${id} -> ${resolved}`)
+            (`[fixHtmlPathPlugin] 别名解析成功: ${id} -> ${resolved}`)
             return resolved
           } else {
             console.warn(`[fixHtmlPathPlugin] 别名路径文件不存在: ${resolved}`)
@@ -81,7 +81,6 @@ const fixHtmlPathPlugin = () => {
             ]
             for (const altPath of altPaths) {
               if (fs.existsSync(altPath)) {
-                console.log(`[fixHtmlPathPlugin] 在备用路径找到: ${altPath}`)
                 return altPath
               }
             }
@@ -103,7 +102,6 @@ const fixHtmlPathPlugin = () => {
         const resolved = path.resolve(routerDir, id)
         try {
           if (fs.existsSync(resolved)) {
-            console.log(`[fixHtmlPathPlugin] 相对路径解析成功: ${id} -> ${resolved}`)
             return resolved
           }
         } catch (e) {
@@ -120,7 +118,6 @@ const fixHtmlPathPlugin = () => {
         // 检查文件是否存在
         try {
           if (fs.existsSync(resolved)) {
-            console.log(`[fixHtmlPathPlugin] 解析成功: ${id} -> ${resolved}`)
             return resolved
           } else {
             console.warn(`[fixHtmlPathPlugin] 文件不存在: ${resolved}, 尝试查找...`)
@@ -132,7 +129,6 @@ const fixHtmlPathPlugin = () => {
             ]
             for (const altPath of altPaths) {
               if (fs.existsSync(altPath)) {
-                console.log(`[fixHtmlPathPlugin] 在备用路径找到: ${altPath}`)
                 return altPath
               }
             }
@@ -151,7 +147,6 @@ const fixHtmlPathPlugin = () => {
         const resolved = path.resolve(projectRoot, id)
         try {
           if (fs.existsSync(resolved)) {
-            console.log(`[fixHtmlPathPlugin] 解析成功: ${id} -> ${resolved}`)
             return resolved
           }
         } catch (e) {
@@ -170,25 +165,6 @@ const fixHtmlPathPlugin = () => {
 // 获取项目根目录（在 Vercel 构建时也能正确工作）
 const rootDir = process.env.VERCEL ? process.cwd() : __dirname
 
-console.log('[Vite Config] 项目根目录:', rootDir)
-console.log('[Vite Config] 是否在 Vercel:', !!process.env.VERCEL)
-console.log('[Vite Config] process.cwd():', process.cwd())
-console.log('[Vite Config] __dirname:', __dirname)
-
-// 检查关键文件是否存在
-const mainJsPath = path.resolve(rootDir, 'src/main.js')
-const logManagementPath = path.resolve(rootDir, 'src/views/logs/RecordsManagement.vue')
-console.log('[Vite Config] src/main.js 路径:', mainJsPath)
-console.log('[Vite Config] src/main.js 是否存在:', fs.existsSync(mainJsPath))
-console.log('[Vite Config] RecordsManagement.vue 路径:', logManagementPath)
-console.log('[Vite Config] RecordsManagement.vue 是否存在:', fs.existsSync(logManagementPath))
-
-// 检查 src/views/logs 目录
-const logsDir = path.resolve(rootDir, 'src/views/logs')
-if (fs.existsSync(logsDir)) {
-  const files = fs.readdirSync(logsDir)
-  console.log('[Vite Config] src/views/logs 目录内容:', files)
-}
 
 export default defineConfig({
   root: rootDir,

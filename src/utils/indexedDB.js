@@ -26,19 +26,15 @@ class IndexedDBManager {
 
       request.onsuccess = () => {
         this.db = request.result
-        console.log('[IndexedDB] 数据库打开成功')
         resolve(this.db)
       }
 
       request.onupgradeneeded = (event) => {
         const db = event.target.result
-        console.log('[IndexedDB] 数据库升级中...')
-
         // 创建对象仓库
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'key' })
           objectStore.createIndex('key', 'key', { unique: true })
-          console.log('[IndexedDB] 对象仓库创建成功')
         }
       }
     })
@@ -75,7 +71,6 @@ class IndexedDBManager {
         const request = objectStore.put(data)
 
         request.onsuccess = () => {
-          console.log(`[IndexedDB] 保存成功: ${key}`)
           resolve(true)
         }
 
@@ -107,10 +102,8 @@ class IndexedDBManager {
         request.onsuccess = () => {
           const result = request.result
           if (result) {
-            console.log(`[IndexedDB] 读取成功: ${key}`)
             resolve(result.value)
           } else {
-            console.log(`[IndexedDB] 未找到数据: ${key}`)
             resolve(null)
           }
         }
@@ -140,7 +133,6 @@ class IndexedDBManager {
         const request = objectStore.delete(key)
 
         request.onsuccess = () => {
-          console.log(`[IndexedDB] 删除成功: ${key}`)
           resolve(true)
         }
 
@@ -168,7 +160,6 @@ class IndexedDBManager {
         const request = objectStore.clear()
 
         request.onsuccess = () => {
-          console.log('[IndexedDB] 清空成功')
           resolve(true)
         }
 
@@ -196,7 +187,6 @@ class IndexedDBManager {
         const request = objectStore.getAllKeys()
 
         request.onsuccess = () => {
-          console.log('[IndexedDB] 获取所有键成功')
           resolve(request.result)
         }
 
@@ -224,7 +214,6 @@ class IndexedDBManager {
         const request = objectStore.getAll()
 
         request.onsuccess = () => {
-          console.log('[IndexedDB] 获取所有数据成功')
           resolve(request.result)
         }
 
@@ -262,14 +251,12 @@ class IndexedDBManager {
             await this.setItem(key, parsedValue)
 
             migratedKeys.push(key)
-            console.log(`[IndexedDB] 已迁移: ${key}`)
           } catch (error) {
             console.warn(`[IndexedDB] 跳过无效数据: ${key}`, error)
           }
         }
       }
 
-      console.log(`[IndexedDB] 迁移完成，共迁移 ${migratedKeys.length} 条数据`)
       return migratedKeys
     } catch (error) {
       console.error('[IndexedDB] 数据迁移失败:', error)
@@ -284,7 +271,6 @@ class IndexedDBManager {
     if (this.db) {
       this.db.close()
       this.db = null
-      console.log('[IndexedDB] 数据库连接已关闭')
     }
   }
 }

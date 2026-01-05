@@ -1159,17 +1159,17 @@ onMounted(() => {
         }
 
         &.active {
-          color: #0969da;
-          border-bottom-color: #0969da;
+          color: var(--tencent-blue-dark);
+          border-bottom-color: var(--tencent-blue-dark);
           font-weight: 600;
 
           .t-icon {
-            color: #0969da;
+            color: var(--tencent-blue-dark);
           }
 
           .tab-count {
-            background: #ddf4ff;
-            color: #0969da;
+            background: var(--tencent-blue-50);
+            color: var(--tencent-blue-dark);
           }
         }
       }

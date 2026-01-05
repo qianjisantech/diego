@@ -17,6 +17,9 @@
         </div>
       </div>
     </div>
+
+    <!-- 问题反馈悬浮按钮 -->
+    <FeedbackFloatButton />
   </div>
 </template>
 
@@ -25,6 +28,7 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import Header from './components/Header.vue'
+import FeedbackFloatButton from '@/components/FeedbackFloatButton.vue'
 import { useUserStore } from '@/store/user'
 
 const userStore = useUserStore()
@@ -43,27 +47,16 @@ const handleSecondaryChange = (isShow) => {
 
 // 根据二级菜单状态动态计算内容区域的左边距
 const sidebarWidth = computed(() => {
-  // 如果是发布日志，二级菜单宽度为 300px
   // 如果是工作台（我的事项），二级菜单宽度为 320px
   // 否则为 280px
   let secondaryWidth = '280px'
-  if (route.path.startsWith('/changelog')) {
-    secondaryWidth = '300px'
-  } else if (route.path.startsWith('/workspace')) {
+  if (route.path.startsWith('/workspace')) {
     secondaryWidth = '320px'
   }
   const width = hasSecondary.value ? secondaryWidth : '80px'
   const viewportWidth = window.innerWidth
-
-  console.log('======================== Layout 计算信息 ========================')
-  console.log('📏 [Layout] sidebarWidth computed:', width, '(hasSecondary:', hasSecondary.value, ')')
-  console.log('📏 [Layout] 视口宽度:', viewportWidth, 'px')
-  console.log('📏 [Layout] 媒体查询状态 (<=768px):', viewportWidth <= 768 ? '✅ 已触发' : '❌ 未触发')
-
   // 在 nextTick 中检查实际应用的样式
   nextTick(() => {
-    console.log('--------------------------- DOM 检查开始 ---------------------------')
-
     // 检查所有关键容器
     const containers = {
       layoutContainer: document.querySelector('.layout-container'),
@@ -75,26 +68,11 @@ const sidebarWidth = computed(() => {
 
     Object.entries(containers).forEach(([name, element]) => {
       if (element) {
-        const styles = window.getComputedStyle(element)
-        const rect = element.getBoundingClientRect()
-        console.log(`✅ ${name}:`, {
-          存在: true,
-          display: styles.display,
-          visibility: styles.visibility,
-          opacity: styles.opacity,
-          position: styles.position,
-          zIndex: styles.zIndex,
-          位置: `left:${rect.left}px, top:${rect.top}px`,
-          尺寸: `${rect.width}x${rect.height}px`,
-          marginLeft: styles.marginLeft || 'none'
-        })
       } else {
         console.error(`❌ ${name}: 不存在！`)
       }
     })
 
-    console.log('--------------------------- DOM 检查结束 ---------------------------')
-    console.log('================================================================')
   })
 
   return width
@@ -102,12 +80,6 @@ const sidebarWidth = computed(() => {
 
 // 监听权限加载状态
 watch(() => userStore.permissionsLoaded, (newVal, oldVal) => {
-  console.log('🔔🔔🔔 [Layout] permissionsLoaded 状态变化:', {
-    从: oldVal,
-    到: newVal,
-    当前路由: route.path
-  })
-
   if (newVal === false && oldVal === true) {
     console.error('⚠️⚠️⚠️ [Layout] 警告：权限状态从 true 变为 false！这可能导致 Sidebar 消失！')
   }
@@ -116,9 +88,6 @@ watch(() => userStore.permissionsLoaded, (newVal, oldVal) => {
 // 组件挂载时获取用户权限
 onMounted(async () => {
   const viewportWidth = window.innerWidth
-  console.log('==================== Layout 组件挂载 ====================')
-  console.log('📱 [Layout] 视口宽度:', viewportWidth, 'px')
-
   if (viewportWidth <= 768) {
     console.warn('⚠️⚠️⚠️ [Layout] 警告：当前视口宽度 <=768px，Sidebar 将被隐藏！')
     console.warn('⚠️⚠️⚠️ [Layout] 原因：响应式 CSS 设置了 transform: translateX(-100%)')
@@ -130,14 +99,10 @@ onMounted(async () => {
   }
 
   try {
-    await userStore.getPermissions()
-    console.log('✅ [Layout] 用户权限加载成功')
-    console.log('✅ [Layout] permissionsLoaded:', userStore.permissionsLoaded)
+    await userStore.userInfo
   } catch (error) {
     console.error('❌ [Layout] 获取用户权限失败:', error)
   }
-
-  console.log('========================================================')
 })
 </script>
 

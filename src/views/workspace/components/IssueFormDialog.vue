@@ -265,7 +265,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { getSpaceList } from '@/api/space'
+import { getCompanyList } from '@/api/company.js'
 import { getUserList } from '@/api/user'
 import { createIssue, updateIssue } from '@/api/workspace'
 import RichTextEditor from './RichTextEditor.vue'
@@ -416,7 +416,7 @@ const loadData = async () => {
 // 获取组织列表
 const fetchSpaceList = async () => {
   try {
-    const res = await getSpaceList()
+    const res = await getCompanyList()
     if (res.success) {
       spaceList.value = res.data || []
     }
@@ -439,7 +439,7 @@ const fetchUserList = async () => {
 
 // 处理组织变化
 const handleSpaceChange = (value) => {
-  console.log('选择的组织ID:', value)
+  '选择的组织ID:', value)
 }
 
 // 处理经办人变化

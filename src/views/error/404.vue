@@ -21,7 +21,7 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const goHome = () => {
-  router.push('/home')
+  router.push('/workspace')
 }
 </script>
 

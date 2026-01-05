@@ -2,41 +2,7 @@
   <div class="login-container">
     <!-- 左上角Logo -->
     <div class="top-logo">
-      <div class="logo-icon-wrapper">
-        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="48" height="48" rx="10" fill="url(#topLogoGradient)"/>
-          <path d="M14 12 L14 36" stroke="white" stroke-width="3" stroke-linecap="round"/>
-          <path d="M14 12 C14 12, 28 12, 28 24 C28 36, 14 36, 14 36"
-                stroke="white"
-                stroke-width="3"
-                stroke-linecap="round"
-                fill="none"/>
-          <circle cx="20" cy="18" r="1.5" fill="white" opacity="0.9"/>
-          <line x1="23" y1="18" x2="30" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
-          <circle cx="20" cy="24" r="1.5" fill="white" opacity="0.9"/>
-          <line x1="23" y1="24" x2="28" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
-          <circle cx="20" cy="30" r="1.5" fill="white" opacity="0.9"/>
-          <line x1="23" y1="30" x2="30" y2="30" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
-          <path d="M33 14 L35 16 L39 11"
-                stroke="#4CAF50"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                fill="none"
-                opacity="0.95"/>
-          <defs>
-            <linearGradient id="topLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#0052D9"/>
-              <stop offset="50%" stop-color="#0066FF"/>
-              <stop offset="100%" stop-color="#0080FF"/>
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-      <div class="logo-text-wrapper">
-        <div class="logo-title">需求管控系统</div>
-        <div class="logo-subtitle">Diego</div>
-      </div>
+      <AppLogo :clickable="false" />
     </div>
 
     <!-- 背景装饰和插画 - 参考图片风格 -->
@@ -100,75 +66,93 @@
     <!-- 主体内容 - 居中卡片 -->
     <div class="login-main">
       <div class="login-card">
-        <!-- 登录表单 -->
+        <!-- 登录表单或已登录账号选择 -->
         <div class="card-body">
           <!-- 标题文字 -->
           <div class="login-title">
             <h2 class="title-text">登录以继续使用</h2>
           </div>
 
-          <!-- 登录方式 Tab -->
-          <t-tabs
-            v-model="loginType"
-            theme="normal"
-            class="login-tabs"
-          >
-            <t-tab-panel value="email" label="邮箱登录" />
-          </t-tabs>
-
-          <t-form
-            ref="loginFormRef"
-            :data="loginForm"
-            :rules="loginRules"
-            class="login-form"
-            label-width="0"
-          >
-            <t-form-item name="email">
-              <t-input
-                v-model="loginForm.email"
-                placeholder="邮箱"
-                size="large"
-                clearable
-              >
-                <template #prefix-icon>
-                  <t-icon name="mail" />
-                </template>
-              </t-input>
-            </t-form-item>
-
-            <t-form-item name="password">
-              <t-input
-                v-model="loginForm.password"
-                :type="passwordVisible ? 'text' : 'password'"
-                placeholder="密码"
-                size="large"
-                clearable
-              >
-                <template #prefix-icon>
-                  <t-icon name="lock-on" />
-                </template>
-                <template #suffix-icon>
-                  <t-icon :name="passwordVisible ? 'browse' : 'browse-off'" @click="togglePasswordVisibility" style="cursor: pointer;" />
-                </template>
-              </t-input>
-            </t-form-item>
-
-            <div class="form-options">
-              <t-checkbox v-model="loginForm.remember">记住我</t-checkbox>
-              <t-link theme="primary" hover="color">忘记密码?</t-link>
+          <template v-if="showAccounts">
+            <div class="account-selection" style="padding: 20px 0;">
+              <div class="account-item" style="display:flex;gap:12px;align-items:center;padding:12px;border-radius:8px;background:#f7fafc;">
+                <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(180deg,#E8F4FF,#D6E9FF);"></div>
+                <div style="flex:1">
+                  <div style="font-weight:600;">{{ authStore.userInfo?.name || authStore.userInfo?.username || '已登录用户' }}</div>
+                  <div style="font-size:12px;color:#9aa0a6;">{{ authStore.userInfo?.phone || authStore.userInfo?.email || '' }}</div>
+                </div>
+              </div>
+              <t-button theme="primary" size="large" block style="margin-top:18px;" @click="acceptExisting">登录</t-button>
+              <div style="text-align:center;margin-top:12px;">
+                <t-link @click="() => {}" theme="primary">使用其他账号</t-link>
+              </div>
             </div>
+          </template>
 
-            <t-button
-              theme="primary"
-              size="large"
-              :loading="loading"
-              block
-              @click="handleLogin"
-              class="submit-btn"
+          <template v-else>
+            <!-- 登录方式 Tab -->
+            <t-tabs
+              v-model="loginType"
+              theme="normal"
+              class="login-tabs"
             >
-              登录
-            </t-button>
-          </t-form>
+              <t-tab-panel value="email" label="邮箱登录" />
+            </t-tabs>
+
+            <t-form
+              ref="loginFormRef"
+              :data="loginForm"
+              :rules="loginRules"
+              class="login-form"
+              label-width="0"
+            >
+              <t-form-item name="email">
+                <t-input
+                  v-model="loginForm.email"
+                  placeholder="邮箱"
+                  size="large"
+                  clearable
+                >
+                  <template #prefix-icon>
+                    <t-icon name="mail" />
+                  </template>
+                </t-input>
+              </t-form-item>
+
+              <t-form-item name="password">
+                <t-input
+                  v-model="loginForm.password"
+                  :type="passwordVisible ? 'text' : 'password'"
+                  placeholder="密码"
+                  size="large"
+                  clearable
+                >
+                  <template #prefix-icon>
+                    <t-icon name="lock-on" />
+                  </template>
+                  <template #suffix-icon>
+                    <t-icon :name="passwordVisible ? 'browse' : 'browse-off'" @click="togglePasswordVisibility" style="cursor: pointer;" />
+                  </template>
+                </t-input>
+              </t-form-item>
+
+              <div class="form-options">
+                <t-checkbox v-model="loginForm.remember">记住我</t-checkbox>
+                <t-link theme="primary" hover="color">忘记密码?</t-link>
+              </div>
+
+              <t-button
+                theme="primary"
+                size="large"
+                :loading="loading"
+                block
+                @click="handleLogin"
+                class="submit-btn"
+              >
+                登录
+              </t-button>
+            </t-form>
+          </template>
         </div>
 
         <!-- 底部注册链接 -->
@@ -187,6 +171,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { useUserStore } from '@/store/user.js'
 import tracking from '@/utils/tracking'
+import AppLogo from '@/components/AppLogo.vue'
+import Cookies from 'js-cookie'
 
 const router = useRouter()
 const route = useRoute()
@@ -220,9 +206,14 @@ const togglePasswordVisibility = () => {
 
 const handleLogin = async () => {
   const valid = await loginFormRef.value.validate()
-  if (!valid) return
+  if (!valid) {
+    // 表单验证失败埋点
+    tracking.trackLoginAttempt(loginForm.email, false, '表单验证失败')
+    return
+  }
 
   loading.value = true
+  const startTime = Date.now()
   try {
     await authStore.login({
       email: loginForm.email,
@@ -230,13 +221,20 @@ const handleLogin = async () => {
       remember: loginForm.remember
     })
 
+    const duration = Date.now() - startTime
     // 登录成功埋点
     tracking.trackLogin(loginForm.email)
+    // 登录尝试成功埋点
+    tracking.trackLoginAttempt(loginForm.email, true, null)
 
-    const redirect = route.query.redirect || '/home'
+    const redirect = route.query.redirect || '/workspace'
     await router.push(redirect)
   } catch (error) {
-    await MessagePlugin.error(error.message || '登录失败')
+    const duration = Date.now() - startTime
+    const errorMessage = error.message || '登录失败'
+    // 登录失败埋点
+    tracking.trackLoginAttempt(loginForm.email, false, errorMessage)
+    await MessagePlugin.error(errorMessage)
   } finally {
     loading.value = false
   }
@@ -244,6 +242,21 @@ const handleLogin = async () => {
 
 const goToRegister = () => {
   router.push('/register')
+}
+
+// show account selection if token present and query flag
+const hasToken = Boolean(Cookies.get('dcp_token'))
+const showAccounts = route.query.showAccounts === '1' && hasToken
+const redirectAfter = route.query.redirect || '/workspace'
+
+const acceptExisting = async () => {
+  try {
+    // ensure user info loaded
+    await authStore.fetchUserInfo()
+  } catch (e) {
+    // ignore
+  }
+  await router.push(redirectAfter)
 }
 </script>
 

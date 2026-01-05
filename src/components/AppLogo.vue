@@ -1,57 +1,55 @@
 <template>
-  <div class="app-logo" :class="{ clickable: clickable }" @click="handleClick">
-    <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 背景圆角矩形 -->
-      <rect width="48" height="48" rx="12" fill="url(#logo-gradient)"/>
-
-      <!-- 主图形 - 组合了 D 字母和文档/项目的抽象图形 -->
-      <!-- D 字母的左侧竖线 -->
-      <path d="M14 12 L14 36" stroke="white" stroke-width="3" stroke-linecap="round"/>
-
-      <!-- D 字母的弧形部分 + 文档层叠效果 -->
-      <path d="M14 12 C14 12, 28 12, 28 24 C28 36, 14 36, 14 36"
-            stroke="white"
-            stroke-width="3"
-            stroke-linecap="round"
-            fill="none"/>
-
-      <!-- 内部装饰 - 代表任务/事项的小元素 -->
-      <!-- 第一个点 -->
-      <circle cx="20" cy="18" r="1.5" fill="white" opacity="0.9"/>
-      <line x1="23" y1="18" x2="30" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
-
-      <!-- 第二个点 -->
-      <circle cx="20" cy="24" r="1.5" fill="white" opacity="0.9"/>
-      <line x1="23" y1="24" x2="28" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
-
-      <!-- 第三个点 -->
-      <circle cx="20" cy="30" r="1.5" fill="white" opacity="0.9"/>
-      <line x1="23" y1="30" x2="30" y2="30" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
-
-      <!-- 右上角小装饰 - 代表完成的对勾 -->
-      <path d="M33 14 L35 16 L39 11"
-            stroke="#4CAF50"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            fill="none"
-            opacity="0.95"/>
-
-      <!-- 渐变定义 -->
+  <div class="app-logo" :class="{ clickable: clickable, 'enterprise-mode': isEnterprise }" @click="handleClick">
+    <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-labelledby="logoTitle">
+      <title id="logoTitle">Cooperise</title>
+      <!-- Redesigned rounded mark -->
       <defs>
         <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#0052D9"/>
-          <stop offset="50%" stop-color="#0066FF"/>
-          <stop offset="100%" stop-color="#0080FF"/>
+          <stop offset="50%" stop-color="#2F78E6"/>
+          <stop offset="100%" stop-color="#60A8FF"/>
         </linearGradient>
+        <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#FF9CCF"/>
+          <stop offset="100%" stop-color="#60A8FF"/>
+        </linearGradient>
+        <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0b254a" flood-opacity="0.12"/>
+        </filter>
       </defs>
+
+      <!-- Background rounded square -->
+      <rect width="48" height="48" rx="10" fill="url(#logo-gradient)"/>
+
+      <!-- Stylized "C" mark: a thick arc with rounded ends -->
+      <g transform="translate(24,24)" filter="url(#softShadow)">
+        <path d="M14 0 A14 14 0 1 1 -14 0" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" fill="none" opacity="0.98"/>
+        <!-- inner accent dot to give identity -->
+        <circle cx="6" cy="-6" r="3.2" fill="url(#accent-grad)"/>
+      </g>
     </svg>
-    <span class="logo-text">Diego</span>
+    <!-- Artistic text logo -->
+    <svg class="logo-text-svg" width="140" height="28" viewBox="0 0 140 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="logoTextGrad" x1="0" x2="1">
+          <stop offset="0%" stop-color="#0052D9"/>
+          <stop offset="60%" stop-color="#2F78E6"/>
+          <stop offset="100%" stop-color="#60A8FF"/>
+        </linearGradient>
+        <filter id="logoTextShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#1f2d4a" flood-opacity="0.12"/>
+        </filter>
+      </defs>
+      <text x="50%" y="20" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="700" font-size="18" fill="url(#logoTextGrad)" filter="url(#logoTextShadow)">
+        Cooperise
+      </text>
+    </svg>
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { computed } from 'vue'
 
 const props = defineProps({
   clickable: {
@@ -60,11 +58,15 @@ const props = defineProps({
   },
   to: {
     type: String,
-    default: '/home'
+    default: '/workspace'
   }
 })
 
 const router = useRouter()
+const route = useRoute()
+const isEnterprise = computed(() => {
+  return route.path && route.path.startsWith('/self/enterprise')
+})
 
 const handleClick = () => {
   if (props.clickable) {
@@ -102,12 +104,31 @@ const handleClick = () => {
   }
 
   .logo-text {
-    font-size: 20px;
-    font-weight: 700;
-    color: #1f2329;
-    white-space: nowrap;
-    transition: color 0.3s ease;
-    letter-spacing: 0.5px;
+    display: none;
+  }
+  .logo-text-svg {
+    display: inline-block;
+    vertical-align: middle;
+  }
+  /* Styles when displayed on /self/enterprise route */
+  &.enterprise-mode {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    > svg:first-child {
+      width: 80px !important;
+      height: 80px !important;
+    }
+
+    .logo-text-svg {
+      width: auto;
+      height: 80px !important;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
   }
 }
 </style>
