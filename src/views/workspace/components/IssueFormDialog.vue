@@ -439,7 +439,7 @@ const fetchUserList = async () => {
 
 // 处理组织变化
 const handleSpaceChange = (value) => {
-  '选择的组织ID:', value)
+  console.log('选择的组织ID:', value)
 }
 
 // 处理经办人变化
