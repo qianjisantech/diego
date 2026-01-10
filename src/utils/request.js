@@ -42,7 +42,8 @@ const fetchClientIP = async () => {
 
   // 尝试多个IP查询服务，提高成功率
   const ipServices = [
-    { url: 'https://api.ipify.org?format=json', key: 'ip' }
+    { url: 'https://ipinfo.io/json', key: 'ip' },
+      { url: 'https://httpbin.org/ip', key: 'ip' }
   ]
 
   for (const service of ipServices) {
