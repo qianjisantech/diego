@@ -1,4 +1,4 @@
-### 多阶段构建：先在 Node 里打包，再用 Nginx 提供静态文件
+l/### 多阶段构建：先在 Node 里打包，再用 Nginx 提供静态文件
 
 ## 1️⃣ 前端构建阶段
 FROM node:18-alpine AS build
@@ -22,6 +22,7 @@ FROM nginx:1.25-alpine
 
 # 拷贝自定义 Nginx 配置
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY /ssl       /etc/ssl/certs
 
 # 拷贝前端构建产物
 COPY --from=build /app/dist /usr/share/nginx/html
