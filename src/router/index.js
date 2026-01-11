@@ -266,6 +266,17 @@ const staticChildRoutes = [
       icon: 'check-circle',
       hidden: false
     }
+  },
+  {
+    path: '/workspace/view/my',
+    name: 'MyView',
+    component: () => import('@/views/workspace/MyView.vue'),
+    meta: {
+      title: '我的视图',
+      requiresAuth: true,
+      icon: 'view-list',
+      hidden: false
+    }
   }
 ]
 
