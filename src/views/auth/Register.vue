@@ -175,6 +175,18 @@
         </div>
       </div>
     </div>
+
+    <!-- 注册成功引导弹窗 -->
+    <div v-if="showSuccessModal" class="success-modal">
+      <div class="success-dialog">
+        <div class="success-title">注册成功</div>
+        <div class="success-body">恭喜您，注册成功！是否现在前往登录页面？</div>
+        <div class="success-actions">
+          <t-button theme="default" variant="outline" @click="cancelGoLogin">稍后再去</t-button>
+          <t-button theme="primary" @click="confirmGoLogin">去登录</t-button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -257,7 +269,7 @@ const handleSendCode = async () => {
   console.log('🔵 邮箱值:', email)
   
   if (!email) {
-    MessagePlugin.warning('请输入邮箱')
+    await MessagePlugin.warning('请输入邮箱')
     // 手动触发表单验证，显示错误提示
     try {
       await registerFormRef.value?.validate()
@@ -270,7 +282,7 @@ const handleSendCode = async () => {
   // 手动验证邮箱格式
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(email)) {
-    MessagePlugin.warning('请输入正确的邮箱格式')
+    await MessagePlugin.warning('请输入正确的邮箱格式')
     // 触发表单验证，显示错误提示
     try {
       await registerFormRef.value?.validate()
@@ -283,7 +295,7 @@ const handleSendCode = async () => {
   // 开始发送验证码
   console.log('🔵 开始发送验证码，邮箱:', email)
   codeLoading.value = true
-  const startTime = Date.now()
+
   try {
     const response = await sendVerificationCode(email)
     console.log('✅ 验证码发送响应:', response)
@@ -299,7 +311,7 @@ const handleSendCode = async () => {
     
     // 发送成功
     console.log('✅ 验证码发送成功')
-    const duration = Date.now() - startTime
+
     tracking.trackSendVerificationCode(email, true, null)
     await MessagePlugin.success(response?.message || '验证码已发送，请查收邮箱')
     
@@ -313,13 +325,6 @@ const handleSendCode = async () => {
     }, 1000)
   } catch (error) {
     console.error('❌ 发送验证码异常:', error)
-    const duration = Date.now() - startTime
-    const errorMessage = error.message || '网络错误，请稍后重试'
-    tracking.trackSendVerificationCode(email, false, errorMessage)
-    // 网络错误或其他异常
-    if (!error.response) {
-      await MessagePlugin.error(errorMessage)
-    }
   } finally {
     codeLoading.value = false
   }
@@ -357,7 +362,6 @@ const handleRegister = async () => {
 
   // 验证通过后才发送请求
   loading.value = true
-  const startTime = Date.now()
   const email = registerForm.email.trim()
   try {
     const response = await register({
@@ -365,17 +369,16 @@ const handleRegister = async () => {
       code: registerForm.code.trim(),
       password: registerForm.password
     })
-    const duration = Date.now() - startTime
-    // 注册成功埋点
-    tracking.trackRegister(email, true, null)
-    // 跳转到登录页
-    router.push('/login')
+
+    // 根据后端返回判断是否成功；只有 success === true 才显示引导弹窗
+    if (response && response.success === true) {
+
+      showSuccessModal.value = true
+    } else {
+      console.error(error)
+    }
   } catch (error) {
-    const duration = Date.now() - startTime
-    const errorMessage = error.message || '注册失败'
-    // 注册失败埋点
-    tracking.trackRegister(email, false, errorMessage)
-    MessagePlugin.error(errorMessage)
+    console.error(error)
   } finally {
     loading.value = false
   }
@@ -383,6 +386,16 @@ const handleRegister = async () => {
 
 const goToLogin = () => {
   router.push('/login')
+}
+
+// modal state and handlers
+const showSuccessModal = ref(false)
+const confirmGoLogin = () => {
+  showSuccessModal.value = false
+  router.push('/login')
+}
+const cancelGoLogin = () => {
+  showSuccessModal.value = false
 }
 </script>
 
@@ -525,6 +538,10 @@ const goToLogin = () => {
         line-height: 1.2;
         letter-spacing: 0.5px;
       }
+    }
+    /* hide AppLogo text (keep only the mark) */
+    :deep(.logo-text-svg) {
+      display: none !important;
     }
   }
 
@@ -706,7 +723,7 @@ const goToLogin = () => {
             border-radius: 12px !important;
             background: #0052d9;
             border: none;
-            margin-top: 12px;
+            margin-top: 30px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
             &:hover:not(:disabled) {
@@ -732,7 +749,7 @@ const goToLogin = () => {
 
       // 底部登录链接
       .card-footer {
-        margin-top: 32px;
+        margin-top: 25px;
         text-align: center;
         padding-top: 24px;
         border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -751,6 +768,39 @@ const goToLogin = () => {
       }
     }
   }
+}
+
+/* success modal styles */
+.success-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.35);
+  z-index: 9999;
+}
+.success-dialog {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 22px;
+  width: 360px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  text-align: center;
+}
+.success-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.success-body {
+  color: #555;
+  margin-bottom: 16px;
+}
+.success-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
 }
 
 // 动画定义
