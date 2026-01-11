@@ -548,6 +548,7 @@ import AssigneeEditDialog from './components/issue/AssigneeEditDialog.vue'
 import { getItem, setItem } from '@/utils/indexedDB'
 
 const workspaceStore = useWorkspaceStore()
+const userStore = useUserStore()
 const route = useRoute()
 const loading = ref(false)
 const showDetailDrawer = ref(false)
@@ -982,7 +983,7 @@ const reloadFilterConditions = () => {
 
 // 监听用户企业数据变化
 watch(() => userStore.userCompanies, (newCompanies) => {
-  if (newCompanies) {
+  if (newCompanies && userStore) {
     setupSpaceList()
   }
 }, { immediate: true })

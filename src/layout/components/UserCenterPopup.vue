@@ -302,7 +302,7 @@ watch(() => props.visible, (newVal) => {
 
 // 监听用户企业数据变化
 watch(() => userStore.userCompanies, (newCompanies) => {
-  if (newCompanies && newCompanies.length > 0) {
+  if (newCompanies && newCompanies.length > 0 && userStore) {
     initCompanySelection()
   }
 }, { immediate: true })

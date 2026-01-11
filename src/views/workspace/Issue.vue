@@ -975,7 +975,7 @@ const reloadFilterConditions = () => {
 
 // 监听用户企业数据变化
 watch(() => userStore.userCompanies, (newCompanies) => {
-  if (newCompanies) {
+  if (newCompanies && userStore) {
     setupSpaceList()
   }
 }, { immediate: true })

@@ -218,9 +218,20 @@ const staticChildRoutes = [
     component: () => import('@/views/workspace/Filter.vue'),
     meta: {
       title: '筛选器',
-      requiresAuth: true,
+      requiresAuth: false,
       icon: 'filter',
-      hidden: true
+      hidden: false
+    }
+  },
+  {
+    path: '/workspace/issue',
+    name: 'MyIssue',
+    component: () => import('@/views/workspace/Issue.vue'),
+    meta: {
+      title: '我的事项',
+      requiresAuth: false,
+      icon: 'task',
+      hidden: false
     }
   },
   {
@@ -231,7 +242,7 @@ const staticChildRoutes = [
       title: '我的创建',
       requiresAuth: true,
       icon: 'add-circle',
-      hidden: true
+      hidden: false
     }
   },
   {
@@ -240,9 +251,9 @@ const staticChildRoutes = [
     component: () => import('@/views/workspace/MyWatched.vue'),
     meta: {
       title: '我的关注',
-      requiresAuth: true,
+      requiresAuth: false,
       icon: 'star',
-      hidden: true
+      hidden: false
     }
   },
   {
@@ -251,9 +262,9 @@ const staticChildRoutes = [
     component: () => import('@/views/workspace/MyCompleted.vue'),
     meta: {
       title: '我的完成',
-      requiresAuth: true,
+      requiresAuth: false,
       icon: 'check-circle',
-      hidden: true
+      hidden: false
     }
   }
 ]

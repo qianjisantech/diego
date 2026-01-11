@@ -402,13 +402,18 @@ watch(() => props.visible, async (val) => {
   }
 })
 
+// 设置组织列表（直接使用 userStore 中的数据）
+const setupSpaceList = () => {
+  spaceList.value = userStore.userCompanies || []
+}
+
 watch(dialogVisible, (val) => {
   emit('update:visible', val)
 })
 
 // 监听用户企业数据变化
 watch(() => userStore.userCompanies, (newCompanies) => {
-  if (newCompanies) {
+  if (newCompanies && userStore) {
     setupSpaceList()
   }
 }, { immediate: true })
@@ -419,11 +424,6 @@ const loadData = async () => {
     setupSpaceList(),
     fetchUserList()
   ])
-}
-
-// 设置组织列表（直接使用 userStore 中的数据）
-const setupSpaceList = () => {
-  spaceList.value = userStore.userCompanies || []
 }
 
 // 获取用户列表
