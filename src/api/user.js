@@ -1,12 +1,16 @@
 import request from '@/utils/request'
 
 /**
- * 获取用户列表
+ * 获取用户列表（根据企业ID）
+ * @param {string|number} companyId - 企业ID，如果不提供则使用当前用户的默认企业ID
  * @returns {Promise}
  */
-export function getUserList() {
+export function getUserList(companyId) {
+  // 如果没有提供companyId，从localStorage获取当前选择的企业ID
+  const currentCompanyId = companyId || localStorage.getItem('activeCompanyId')
+
   return request({
-    url: '/user/list',
+    url: `/console/self/user/select/options/${currentCompanyId}`,
     method: 'get'
   })
 }
