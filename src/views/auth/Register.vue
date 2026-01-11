@@ -68,9 +68,7 @@
       <div class="register-card">
         <!-- Logo和标题 -->
         <div class="card-header">
-          <div class="logo-container">
-            <div class="logo-icon">D</div>
-          </div>
+      
         </div>
 
         <!-- 注册表单 -->
@@ -541,7 +539,8 @@ const cancelGoLogin = () => {
     }
     /* hide AppLogo text (keep only the mark) */
     :deep(.logo-text-svg) {
-      display: none !important;
+      display: inline-block !important;
+      vertical-align: middle;
     }
   }
 
@@ -946,5 +945,6 @@ const cancelGoLogin = () => {
     }
   }
 }
+
 </style>
 

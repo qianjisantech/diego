@@ -265,9 +265,9 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { getCompanyList } from '@/api/company.js'
 import { getUserList } from '@/api/user'
 import { createIssue, updateIssue } from '@/api/workspace'
+import { useUserStore } from '@/store/user'
 import RichTextEditor from './RichTextEditor.vue'
 
 const props = defineProps({
@@ -282,6 +282,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:visible', 'success'])
+const userStore = useUserStore()
 
 const dialogVisible = ref(false)
 const formRef = ref(null)
@@ -405,24 +406,24 @@ watch(dialogVisible, (val) => {
   emit('update:visible', val)
 })
 
+// 监听用户企业数据变化
+watch(() => userStore.userCompanies, (newCompanies) => {
+  if (newCompanies) {
+    setupSpaceList()
+  }
+}, { immediate: true })
+
 // 加载数据
 const loadData = async () => {
   await Promise.all([
-    fetchSpaceList(),
+    setupSpaceList(),
     fetchUserList()
   ])
 }
 
-// 获取组织列表
-const fetchSpaceList = async () => {
-  try {
-    const res = await getCompanyList()
-    if (res.success) {
-      spaceList.value = res.data || []
-    }
-  } catch (error) {
-    console.error('获取组织列表失败:', error)
-  }
+// 设置组织列表（直接使用 userStore 中的数据）
+const setupSpaceList = () => {
+  spaceList.value = userStore.userCompanies || []
 }
 
 // 获取用户列表

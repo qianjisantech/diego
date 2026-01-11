@@ -809,7 +809,6 @@ const handlePrimaryMenuClick = async (menu) => {
       component: m.component,
       menuType: m.menuType,
       visible: m.visible,
-      status: m.status
     })))
 
     // 检查动态路由是否已加载

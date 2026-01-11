@@ -80,7 +80,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { getSelfCompanies, activateCompany } from '@/api/company.js'
+import { activateCompany } from '@/api/company.js'
 import tracking from '@/utils/tracking'
 import InviteModal from '@/components/InviteModal.vue'
 import { eventBus } from '@/utils/eventBus.js'
@@ -145,39 +145,30 @@ const userAvatar = computed(() => {
   return `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`
 })
 
-// 企业列表
-const companyList = ref([])
+// 企业列表（直接使用 userStore 中的 companies）
+const companyList = computed(() => userStore.userCompanies || [])
 const activeCompanyId = ref('')
 const currentEnterprise = ref(null)
 const showSecondaryMenu = ref(false)
 
-// 加载企业列表
-const loadCompanyList = async () => {
-  try {
-    const res = await getSelfCompanies()
-    if (res.success || res.code === 200) {
-      companyList.value = res.data || []
-      // 设置当前激活的企业（如果有）
-      if (companyList.value.length > 0) {
-        // try to find server-designated default company first
-        const defaultCompany = companyList.value.find(c => c.is_default || c.isDefault)
-        const initial = defaultCompany ? defaultCompany : companyList.value[0]
-        activeCompanyId.value = String(initial.id)
-        currentEnterprise.value = initial
-        // 确保二级菜单显示（如果弹窗已打开）
-        if (props.visible) {
-          showSecondaryMenu.value = true
-        }
-        // update user store selected company as source of truth
-        try { userStore.setSelectedCompany(initial.id) } catch (e) {}
-        localSelectedCompany.value = String(initial.id)
-      }
+// 初始化企业选择状态
+const initCompanySelection = () => {
+  if (companyList.value.length > 0) {
+    // try to find server-designated default company first
+    const defaultCompany = companyList.value.find(c => c.is_default || c.isDefault)
+    const initial = defaultCompany ? defaultCompany : companyList.value[0]
+    activeCompanyId.value = String(initial.id)
+    currentEnterprise.value = initial
+    // 确保二级菜单显示（如果弹窗已打开）
+    if (props.visible) {
+      showSecondaryMenu.value = true
     }
-
-    console.warn('个人用户弹窗列表',JSON.stringify( companyList.value))
-  } catch (error) {
-    console.error('获取企业列表失败:', error)
+    // update user store selected company as source of truth
+    try { userStore.setSelectedCompany(initial.id) } catch (e) {}
+    localSelectedCompany.value = String(initial.id)
   }
+
+  console.warn('个人用户弹窗列表',JSON.stringify(companyList.value))
 }
 
 // 处理点击遮罩层（外部区域）
@@ -295,22 +286,29 @@ const handleInviteMembers = () => {
 // 监听 visible prop 变化
 watch(() => props.visible, (newVal) => {
   if (newVal) {
-    // 如果有已存在的企业数据，立即显示二级菜单
+    // 如果有已存在的企业数据，立即显示二级菜单和初始化企业选择
     if (companyList.value.length > 0) {
       activeCompanyId.value = String(companyList.value[0].id)
       currentEnterprise.value = companyList.value[0]
       showSecondaryMenu.value = true
     }
-    // 异步加载企业列表
-    loadCompanyList()
+    // 初始化企业选择状态
+    initCompanySelection()
   } else {
     // 关闭弹窗时重置二级菜单
     showSecondaryMenu.value = false
   }
 }, { immediate: true })
 
+// 监听用户企业数据变化
+watch(() => userStore.userCompanies, (newCompanies) => {
+  if (newCompanies && newCompanies.length > 0) {
+    initCompanySelection()
+  }
+}, { immediate: true })
+
 onMounted(() => {
-  loadCompanyList()
+  initCompanySelection()
 })
 // keep localSelectedCompany in sync with store
 watch(() => userStore.selectedCompanyId, (v) => {

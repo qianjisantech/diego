@@ -5,14 +5,13 @@ import Cookies from 'js-cookie'
 import { login as loginApi, getUserInfo as getUserInfoApi, logout as logoutApi } from '@/api/auth'
 import { generateRoutes, menusToSidebar, getDefaultHomePage } from '@/utils/routerHelper'
 import { useWorkspaceStore } from './workspace'
-import { getSelfCompanies } from '@/api/company.js'
 
 export const useUserStore = defineStore('user', () => {
   const userInfo = ref(null)
   const token = ref(Cookies.get('dcp_token') || '')
   const menuPermissions = ref([])
   const dataPermissions = ref(null)
-  const userSpaces = ref([])
+  const userCompanies = ref([])
   const selectedCompanyId = ref('')
   const roles = ref([]) // 用户角色
   const permissionsLoaded = ref(false) // 权限是否已加载
@@ -46,11 +45,19 @@ export const useUserStore = defineStore('user', () => {
 
 
   // 获取用户信息和菜单（用于动态路由）
+  // promise to dedupe concurrent fetchUserInfo calls
+  let fetchUserInfoPromise = null
+
   const fetchUserInfo = async () => {
+    // if a fetch is already in-flight, return the same promise
+    if (fetchUserInfoPromise) {
+      return fetchUserInfoPromise
+    }
+    fetchUserInfoPromise = (async () => {
     try {
       // use getUserInfo to fetch profile and related permission/menu data
       const res = await getUserInfoApi()
-      if (res && (res.success || res.code === 200)) {
+      if (res && (res.success )) {
         const data = res.data || res
 
         // 保存用户信息（保留所有字段，包括 user_code）
@@ -62,7 +69,6 @@ export const useUserStore = defineStore('user', () => {
           email: data.user_info?.email,
           avatar: data.user_info?.avatar,
           phone: data.user_info?.phone,
-          user_code: data.user_info?.user_code,
           userCode: data.user_info?.user_code
         }
 
@@ -76,31 +82,13 @@ export const useUserStore = defineStore('user', () => {
         roles.value = data.roles || []
 
         // 保存组织（兼容 profile 返回的 companies 字段）
-        userSpaces.value = data.companies || data.spaces || []
-        // 如果后端返回组织列表并且未设置 selectedCompanyId，优先通过控制台接口查找 is_default 为 true 的企业
-        if ((!selectedCompanyId.value || selectedCompanyId.value === '') && Array.isArray(userSpaces.value) && userSpaces.value.length > 0) {
-          try {
-            const resCompanies = await getSelfCompanies()
-            const companies = (resCompanies?.data) || (Array.isArray(resCompanies) ? resCompanies : [])
-            const defaultCompany = Array.isArray(companies) ? companies.find(c => c.is_default || c.isDefault) : null
-            if (defaultCompany && defaultCompany.id) {
-              selectedCompanyId.value = String(defaultCompany.id)
-              try { eventBus.emit('company:changed', selectedCompanyId.value) } catch (e) {}
-
-            } else {
-              const defaultSpace = userSpaces.value.find(s => s.is_default || s.isDefault) || userSpaces.value[0]
-              if (defaultSpace?.id) {
-                selectedCompanyId.value = String(defaultSpace.id)
-                try { eventBus.emit('company:changed', selectedCompanyId.value) } catch (e) {}
-              }
-            }
-          } catch (e) {
-            // fallback to userSpaces if API call fails
-            const defaultSpace = userSpaces.value.find(s => s.is_default || s.isDefault) || userSpaces.value[0]
-            if (defaultSpace?.id) {
-              selectedCompanyId.value = String(defaultSpace.id)
-              try { eventBus.emit('company:changed', selectedCompanyId.value) } catch (err) {}
-            }
+        userCompanies.value = data.companies  || []
+        // 如果后端返回组织列表并且未设置 selectedCompanyId，直接从 companies 字段中查找默认企业
+        if ((!selectedCompanyId.value || selectedCompanyId.value === '') && Array.isArray(userCompanies.value) && userCompanies.value.length > 0) {
+          const defaultCompany = userCompanies.value.find(c => c.is_default || c.isDefault) || userCompanies.value[0]
+          if (defaultCompany?.id) {
+            selectedCompanyId.value = String(defaultCompany.id)
+            try { eventBus.emit('company:changed', selectedCompanyId.value) } catch (e) {}
           }
         }
 
@@ -120,7 +108,12 @@ export const useUserStore = defineStore('user', () => {
     } catch (error) {
       console.error('获取用户信息失败:', error)
       throw error
+    } finally {
+      // clear in-flight promise so subsequent calls will refetch if needed
+      fetchUserInfoPromise = null
     }
+    })()
+    return fetchUserInfoPromise
   }
 
   // 兼容老代码：提供 getPermissions 方法（用于路由守卫中调用）
@@ -202,7 +195,7 @@ export const useUserStore = defineStore('user', () => {
       userInfo.value = null
       menuPermissions.value = []
       dataPermissions.value = null
-      userSpaces.value = []
+      userCompanies.value = []
       roles.value = []
       permissionsLoaded.value = false // 重置权限加载状态
       permissionsLoading.value = false // 重置权限加载中状态
@@ -228,9 +221,9 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // 检查是否有某个组织的权限
-  const hasSpacePermission = (spaceId, permission) => {
-    const space = userSpaces.value.find(s => s.id === spaceId)
-    return space ? space.permissions.includes(permission) : false
+  const hasCompanyPermission = (companyId, permission) => {
+    const company = userCompanies.value.find(s => s.id === spaceId)
+    return company ? company.permissions.includes(permission) : false
   }
 
   // 默认首页路径（固定为首页）
@@ -244,7 +237,7 @@ export const useUserStore = defineStore('user', () => {
     token,
     menuPermissions,
     dataPermissions,
-    userSpaces,
+    userCompanies,
     roles,
     permissionsLoaded,
     permissionsLoading,
@@ -267,6 +260,6 @@ export const useUserStore = defineStore('user', () => {
     setRoutesLoaded,
     logout,
     hasMenuPermission,
-    hasSpacePermission
+    hasCompanyPermission
   }
 })

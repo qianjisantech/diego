@@ -23,14 +23,22 @@ const getLoadingStore = () => {
 
 // 获取客户端IP地址
 let clientIP = 'auto-detect'
+// promise for in-flight IP fetch to avoid duplicated calls
+let clientIPPromise = null
 
 /**
  * 获取客户端真实IP地址
  * 尝试多种方式获取用户浏览器的真实公网IP
  */
 const fetchClientIP = async () => {
+  // already have a resolved IP
   if (clientIP && clientIP !== 'auto-detect') {
     return clientIP
+  }
+
+  // reuse in-flight promise to avoid duplicate network calls
+  if (clientIPPromise) {
+    return clientIPPromise
   }
 
   // 检查fetch和AbortController是否可用
@@ -40,44 +48,52 @@ const fetchClientIP = async () => {
     return clientIP
   }
 
-  // 尝试多个IP查询服务，提高成功率
-  const ipServices = [
-    { url: 'https://ipinfo.io/json', key: 'ip' },
-      { url: 'https://httpbin.org/ip', key: 'ip' }
-  ]
+  clientIPPromise = (async () => {
+    // 尝试多个IP查询服务，提高成功率
+    const ipServices = [
+      { url: 'https://ipinfo.io/json', key: 'ip' },
+      { url: 'https://httpbin.org/ip', key: 'origin' }
+    ]
 
-  for (const service of ipServices) {
-    try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 3000) // 3秒超时
+    for (const service of ipServices) {
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000) // 3秒超时
 
-      const response = await fetch(service.url, {
-        method: 'GET',
-        mode: 'cors',
-        signal: controller.signal
-      })
+        const response = await fetch(service.url, {
+          method: 'GET',
+          mode: 'cors',
+          signal: controller.signal
+        })
 
-      clearTimeout(timeoutId)
+        clearTimeout(timeoutId)
 
-      if (response.ok) {
-        const data = await response.json()
-        const ip = data[service.key]
+        if (response.ok) {
+          const data = await response.json()
+          const ip = data[service.key]
 
-        if (ip && ip !== 'undefined') {
-          clientIP = ip
-          return clientIP
+          if (ip && ip !== 'undefined') {
+            clientIP = ip
+            return clientIP
+          }
         }
+      } catch (error) {
+        console.warn('⚠️ IP服务失败:', service.url, error && error.message)
+        continue
       }
-    } catch (error) {
-      console.warn('⚠️ IP服务失败:', service.url, error.message)
-      continue
     }
-  }
 
-  // 所有服务都失败，让后端自动识别
-  console.warn('⚠️ 前端无法获取IP，将由后端自动识别')
-  clientIP = 'auto-detect'
-  return clientIP
+    // 所有服务都失败，让后端自动识别
+    console.warn('⚠️ 前端无法获取IP，将由后端自动识别')
+    clientIP = 'auto-detect'
+    return clientIP
+  })()
+
+  try {
+    return await clientIPPromise
+  } finally {
+    clientIPPromise = null
+  }
 }
 
 // 初始化时尝试获取IP（延迟执行，避免打包问题）

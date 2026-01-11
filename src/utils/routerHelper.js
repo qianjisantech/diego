@@ -38,7 +38,7 @@ export function generateRoutes(menus, parentPath = '') {
 
 
   menus.forEach((menu, index) => {
-    if (menu.visible !== 1 || menu.status !== 1) {
+    if (menu.visible === 1) {
       return
     }
 
@@ -57,7 +57,7 @@ export function generateRoutes(menus, parentPath = '') {
           permission: menu.permission,
           menuId: menu.id,
           parentId: menu.parentId,
-          hidden: menu.visible !== 1,
+          hidden: menu.visible === 0,
           requiresAuth: true
         }
       }
@@ -244,7 +244,7 @@ export function menusToSidebar(menus) {
 
   menus.forEach(menu => {
     // 只处理可见的菜单和目录
-    if (menu.visible !== 1 || menu.status !== 1) {
+    if (menu.visible === 0 ) {
       return
     }
 

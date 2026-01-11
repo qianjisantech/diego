@@ -535,9 +535,9 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
 import { useWorkspaceStore } from '@/store/workspace.js'
+import { useUserStore } from '@/store/user.js'
 import { getIssueList, getIssueDetail, updateIssue, deleteIssue } from '@/api/workspace.js'
 import { getUserList } from '@/api/user.js'
-import { getCompanyList } from '@/api/company.js'
 import IssueDetail from './components/IssueDetail.vue'
 import IssueFormDialog from './components/IssueFormDialog.vue'
 import IssueFilterDrawer from './components/issue/IssueFilterDrawer.vue'
@@ -548,6 +548,7 @@ import AssigneeEditDialog from './components/issue/AssigneeEditDialog.vue'
 import { getItem, setItem } from '@/utils/indexedDB'
 
 const workspaceStore = useWorkspaceStore()
+const userStore = useUserStore()
 const route = useRoute()
 const loading = ref(false)
 const showDetailDrawer = ref(false)
@@ -961,16 +962,9 @@ const fetchUserList = async () => {
   }
 }
 
-// 获取组织列表
-const fetchSpaceList = async () => {
-  try {
-    const res = await getCompanyList()
-    if (res.success) {
-      spaceList.value = res.data || []
-    }
-  } catch (error) {
-    console.error('获取组织列表失败:', error)
-  }
+// 设置组织列表（直接使用 userStore 中的数据）
+const setupSpaceList = () => {
+  spaceList.value = userStore.userCompanies || []
 }
 
 // 重新加载筛选条件
@@ -979,13 +973,19 @@ const reloadFilterConditions = () => {
   filterConditions.value = saved
 }
 
+// 监听用户企业数据变化
+watch(() => userStore.userCompanies, (newCompanies) => {
+  if (newCompanies) {
+    setupSpaceList()
+  }
+}, { immediate: true })
+
 onMounted(async () => {
   await initColumnConfig()
   // 重新加载筛选条件（可能从筛选器页面返回时已更新）
   reloadFilterConditions()
   fetchIssueList()
   fetchUserList()
-  fetchSpaceList()
 })
 
 // 监听路由变化，从筛选器页面返回时重新加载筛选条件

@@ -50,16 +50,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { useWorkspaceStore } from '@/store/workspace'
+import { useUserStore } from '@/store/user'
 import { getUserList } from '@/api/user'
-import { getCompanyList } from '@/api/company.js'
 import IssueFilter from './components/issue/IssueFilter.vue'
 
 const router = useRouter()
 const workspaceStore = useWorkspaceStore()
+const userStore = useUserStore()
 
 // 用户列表和组织列表
 const userList = ref([])
@@ -135,16 +136,9 @@ const fetchUserList = async () => {
   }
 }
 
-// 加载组织列表
-const fetchSpaceList = async () => {
-  try {
-    const res = await getCompanyList()
-    if (res.success || res.code === 200) {
-      spaceList.value = res.data || []
-    }
-  } catch (error) {
-    console.error('获取组织列表失败:', error)
-  }
+// 设置组织列表（直接使用 userStore 中的数据）
+const setupSpaceList = () => {
+  spaceList.value = userStore.userCompanies || []
 }
 
 // 从 localStorage 加载已保存的筛选条件
@@ -169,9 +163,15 @@ const loadSavedFilters = () => {
   }
 }
 
+// 监听用户企业数据变化
+watch(() => userStore.userCompanies, (newCompanies) => {
+  if (newCompanies) {
+    setupSpaceList()
+  }
+}, { immediate: true })
+
 onMounted(() => {
   fetchUserList()
-  fetchSpaceList()
   loadSavedFilters()
 })
 </script>
