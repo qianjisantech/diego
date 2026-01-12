@@ -407,6 +407,8 @@ const handleSelectChange = (value) => {
       font-weight: 600;
       color: #1f2329;
       border-bottom: 1px solid #e7e7e7;
+      /* 更紧凑的表头高度与内边距 */
+      padding: 8px 12px !important;
     }
   }
 
@@ -422,8 +424,17 @@ const handleSelectChange = (value) => {
       td {
         color: #646a73;
         border-bottom: 1px solid #e7e7e7;
+        /* 紧凑表格行：减少内边距与行高 */
+        padding: 8px 12px !important;
+        line-height: 1.2 !important;
+        vertical-align: middle !important;
       }
     }
+  }
+  /* 总体压缩表格字体与图标大小以配合紧凑行高 */
+  font-size: 13px;
+  :deep(.t-icon) {
+    font-size: 14px;
   }
 }
 
