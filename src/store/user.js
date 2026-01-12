@@ -87,8 +87,8 @@ export const useUserStore = defineStore('user', () => {
         if ((!selectedCompanyId.value || selectedCompanyId.value === '') && Array.isArray(userCompanies.value) && userCompanies.value.length > 0) {
           const defaultCompany = userCompanies.value.find(c => c.is_default || c.isDefault) || userCompanies.value[0]
           if (defaultCompany?.id) {
-            selectedCompanyId.value = String(defaultCompany.id)
-            try { eventBus.emit('company:changed', selectedCompanyId.value) } catch (e) {}
+              selectedCompanyId.value = String(defaultCompany.id)
+              try { eventBus.emit('company:changed', selectedCompanyId.value) } catch (e) {}
           }
         }
 

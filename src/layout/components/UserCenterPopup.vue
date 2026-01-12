@@ -153,20 +153,20 @@ const showSecondaryMenu = ref(false)
 
 // 初始化企业选择状态
 const initCompanySelection = () => {
-  if (companyList.value.length > 0) {
-    // try to find server-designated default company first
-    const defaultCompany = companyList.value.find(c => c.is_default || c.isDefault)
-    const initial = defaultCompany ? defaultCompany : companyList.value[0]
-    activeCompanyId.value = String(initial.id)
-    currentEnterprise.value = initial
-    // 确保二级菜单显示（如果弹窗已打开）
-    if (props.visible) {
-      showSecondaryMenu.value = true
+      if (companyList.value.length > 0) {
+        // try to find server-designated default company first
+        const defaultCompany = companyList.value.find(c => c.is_default || c.isDefault)
+        const initial = defaultCompany ? defaultCompany : companyList.value[0]
+        activeCompanyId.value = String(initial.id)
+        currentEnterprise.value = initial
+        // 确保二级菜单显示（如果弹窗已打开）
+        if (props.visible) {
+          showSecondaryMenu.value = true
+        }
+        // update user store selected company as source of truth
+        try { userStore.setSelectedCompany(initial.id) } catch (e) {}
+        localSelectedCompany.value = String(initial.id)
     }
-    // update user store selected company as source of truth
-    try { userStore.setSelectedCompany(initial.id) } catch (e) {}
-    localSelectedCompany.value = String(initial.id)
-  }
 
   console.warn('个人用户弹窗列表',JSON.stringify(companyList.value))
 }

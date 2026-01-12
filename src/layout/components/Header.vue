@@ -2,45 +2,16 @@
   <div class="header-container">
     <div class="header-left">
       <AppLogo :clickable="true" />
-      <h2 class="page-title">{{ pageTitle }}</h2>
-    </div>
-
-    <!-- 滚动通知 -->
-    <div v-if="notices.length > 0" class="notice-wrapper" :class="getNoticeTypeClass(notices[0].type)">
-      <t-icon name="notification" size="18px" class="notice-icon" />
-      <div class="notice-scroll">
-        <div class="notice-content">
-          <span
-            v-for="(notice, index) in notices"
-            :key="index"
-            class="notice-item"
-            :class="{ 'notice-clickable': notice.showUnderline || notice.link }"
-            @click="notice.link ? handleNoticeClick(notice) : null"
-          >
-            {{ notice.title }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <div class="header-right">
-      <t-button theme="primary" size="medium" @click="handleCreateIssue" class="create-issue-btn">
-        <template #icon>
-          <t-icon name="add" />
-        </template>
-        新建
-      </t-button>
-
       <div class="search-wrapper" :class="{ 'search-focused': searchFocused }">
         <t-input
-          v-model="searchIssueNumber"
-          placeholder="搜索事项单号或者概要"
-          clearable
-          @focus="handleSearchFocus"
-          @blur="handleSearchBlur"
-          @input="handleSearchInput"
-          @keyup.enter="handleDirectSearch"
-          class="search-input"
+            v-model="searchIssueNumber"
+            placeholder="搜索事项单号或者概要"
+            clearable
+            @focus="handleSearchFocus"
+            @blur="handleSearchBlur"
+            @input="handleSearchInput"
+            @keyup.enter="handleDirectSearch"
+            class="search-input"
         >
           <template #prefix-icon>
             <t-icon name="search" />
@@ -50,10 +21,10 @@
         <!-- 搜索结果下拉框 -->
         <div v-if="showSearchResults && searchResults.length > 0" class="search-results">
           <div
-            v-for="item in searchResults"
-            :key="item.id"
-            class="search-result-item"
-            @mousedown="handleSelectIssue(item)"
+              v-for="item in searchResults"
+              :key="item.id"
+              class="search-result-item"
+              @mousedown="handleSelectIssue(item)"
           >
             <div class="issue-info">
               <span class="issue-no">{{ item.issueNo }}</span>
@@ -72,6 +43,32 @@
         </div>
       </div>
     </div>
+    <div class="header-right">
+      <t-button theme="primary" size="medium" @click="handleCreateIssue" class="create-issue-btn">
+        <template #icon>
+          <t-icon name="add" />
+        </template>
+        新建
+      </t-button>
+    </div>
+<!--    &lt;!&ndash; 滚动通知 &ndash;&gt;-->
+<!--    <div v-if="notices.length > 0" class="notice-wrapper" :class="getNoticeTypeClass(notices[0].type)">-->
+<!--      <div class="notice-scroll">-->
+<!--        <div class="notice-content">-->
+<!--          <span-->
+<!--            v-for="(notice, index) in notices"-->
+<!--            :key="index"-->
+<!--            class="notice-item"-->
+<!--            :class="{ 'notice-clickable': notice.showUnderline || notice.link }"-->
+<!--            @click="notice.link ? handleNoticeClick(notice) : null"-->
+<!--          >-->
+<!--            {{ notice.title }}-->
+<!--          </span>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+
+
   </div>
 </template>
 
@@ -456,13 +453,13 @@ const getNoticeTypeClass = (type) => {
   left: 0;
   right: 0;
   z-index: 100;
-  height: 60px;
-  min-height: 60px;
+  height:55px;
+  min-height: 55px;
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 0 24px;
+  padding: 0 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -472,23 +469,34 @@ const getNoticeTypeClass = (type) => {
   .header-left {
     display: flex;
     align-items: center;
-    gap: 24px;
 
     :deep(.app-logo) {
       padding-right: 24px;
       border-right: 1px solid rgba(0, 0, 0, 0.06);
       .space-switch-select {
-        min-width: 200px;
+        min-width: 160px;
+      }
+    }
+    
+    .left-create-btn {
+      margin-left: 12px;
+    }
+
+    .search-wrapper {
+      width: 260px;
+      transition: all 0.3s ease;
+      position: relative;
+      margin-left: 12px;
+
+      &.search-focused {
+        width: 340px;
+      }
+
+      .search-input {
+        transition: all 0.3s ease;
       }
     }
 
-    .page-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--color-text-primary);
-      margin: 0;
-      letter-spacing: -0.01em;
-    }
   }
 
   .notice-wrapper {
@@ -615,6 +623,7 @@ const getNoticeTypeClass = (type) => {
 
     .create-issue-btn {
       flex-shrink: 0;
+      margin-left: 0;
     }
 
     .search-wrapper {
@@ -674,7 +683,7 @@ const getNoticeTypeClass = (type) => {
             min-width: 0;
 
             .issue-no {
-              font-size: 13px;
+              font-size: 12px;
               font-weight: 500;
               color: var(--tencent-blue-dark);
             }
@@ -778,6 +787,30 @@ const getNoticeTypeClass = (type) => {
 
       .page-title {
         font-size: 16px;
+      }
+    }
+  }
+}
+
+// 响应式：在窄屏上移除新建按钮左侧大间距
+@media (max-width: 1024px) {
+  .header-container {
+    .header-right {
+      .create-issue-btn {
+        margin-left: 12px !important;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    .header-right {
+      .create-issue-btn {
+        margin-left: 8px !important;
+      }
+      .search-wrapper {
+        display: none; /* 隐藏搜索框，释放空间 */
       }
     }
   }
@@ -917,3 +950,4 @@ const getNoticeTypeClass = (type) => {
   }
 }
 </style>
+
