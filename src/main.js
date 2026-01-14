@@ -33,6 +33,24 @@ import tracking, { setupTrackingRouter, setupTrackingClick } from './utils/track
   // 将tracking实例挂载到全局
   app.config.globalProperties.$tracking = tracking
 
+  // 根据路由自动切换 dense-mode（仅在工作台/管理类页面启用紧凑模式）
+  const densePrefixes = ['/workspace', '/rbac', '/admin']
+  const updateDenseMode = (to) => {
+    try {
+      const path = to?.path || (router.currentRoute && router.currentRoute.value && router.currentRoute.value.path) || ''
+      const enable = densePrefixes.some(prefix => path.startsWith(prefix))
+      if (enable) document.body.classList.add('dense-mode')
+      else document.body.classList.remove('dense-mode')
+    } catch (e) {
+      // ignore
+    }
+  }
+  router.afterEach((to) => {
+    updateDenseMode(to)
+  })
+  // 初始化时根据当前路由设置一次
+  updateDenseMode(router.currentRoute && router.currentRoute.value ? router.currentRoute.value : {})
+
   app.mount('#app')
   
   // 应用初始化完成后隐藏加载动画

@@ -178,6 +178,50 @@ body {
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05) !important;
 }
 
+/* Compact / unified form control styles (dense mode) */
+body.dense-mode {
+.t-input__inner,
+.t-select .t-input__inner,
+.t-input-number .t-input__inner,
+.t-select__wrap,
+.t-input__wrap,
+.t-picker__input {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 6px 10px !important;
+  border-radius: var(--radius-md) !important;
+  font-size: 13px !important;
+  display: flex;
+  align-items: center;
+}
+
+/* Textarea smaller default */
+.t-textarea__inner,
+.w-e-text-container,
+.w-e-scroll {
+  min-height: 72px !important; /* approx 2 lines */
+  max-height: 160px !important;
+}
+
+/* Ensure select placeholder vertically centered */
+.t-select .t-input__placeholder,
+.t-select .t-input__inner {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Compact number input */
+.t-input-number .t-input__inner {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+/* Slightly subtler focus ring for dense mode */
+.t-input--focused, .t-select--focused {
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.04) !important;
+}
+}
+
 /* 苹果风格表格 */
 .t-table {
   border-radius: var(--radius-md) !important;
@@ -203,24 +247,24 @@ body {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--spacing-md);
 }
 
 @media (max-width: 1024px) {
   .container-responsive {
-    padding: 0 16px;
+    padding: 0 calc(var(--spacing-md) * 0.75);
   }
 }
 
 @media (max-width: 768px) {
   .container-responsive {
-    padding: 0 12px;
+    padding: 0 calc(var(--spacing-sm) * 2);
   }
 }
 
 @media (max-width: 480px) {
   .container-responsive {
-    padding: 0 8px;
+    padding: 0 var(--spacing-xs);
   }
 }
 

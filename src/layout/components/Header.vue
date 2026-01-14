@@ -3,41 +3,48 @@
     <div class="header-left">
       <AppLogo :clickable="true" />
       <div class="search-wrapper" :class="{ 'search-focused': searchFocused, 'show-results': showSearchResults }">
-        <t-input
+      <t-input
+            ref="searchInput"
             v-model="searchIssueNumber"
-            placeholder="搜索事项单号或者概要"
+            placeholder="搜索事项单号或者概要（按 / 聚焦）"
             clearable
             @focus="handleSearchFocus"
             @blur="handleSearchBlur"
             @input="handleSearchInput"
             @enter="handleDirectSearch"
+            @keydown="handleSearchKeydown"
             class="search-input"
         >
           <template #prefix-icon>
             <t-icon name="search" />
           </template>
         </t-input>
-        <!-- 搜索结果下拉框 -->
-        <div v-if="showSearchResults && searchResults.length > 0" class="search-results">
-          <div
-              v-for="item in searchResults"
-              :key="item.id"
-              class="search-result-item"
-              @mousedown="handleSelectIssue(item)"
-          >
-            <div class="issue-info">
-              <span class="issue-no">{{ item.issueNo }}</span>
-              <span class="issue-summary">{{ item.summary }}</span>
+        <!-- 搜索结果下拉框（按项目/类型分组，支持键盘导航与高亮） -->
+        <div v-if="showSearchResults && flattenedResults.length > 0" class="search-results">
+          <template v-for="(group, gIdx) in groupedResults" :key="gIdx">
+            <div class="search-group" v-if="group.title">{{ group.title }}</div>
+            <div
+                v-for="item in group.items"
+                :key="item.id"
+                class="search-result-item"
+                :class="{ 'is-highlighted': flattenedIndex(item) === highlightedIndex }"
+                @mousedown="handleSelectIssue(item)"
+                @mouseover="highlightedIndex = flattenedIndex(item)"
+            >
+              <div class="issue-info">
+                <span class="issue-no" v-html="highlightText(item.issueNo || '', searchIssueNumber)"></span>
+                <span class="issue-summary" v-html="highlightText(item.summary || '', searchIssueNumber)"></span>
+              </div>
+              <t-tag v-if="item.priority" size="small" :theme="getPriorityTheme(item.priority)">
+                {{ item.priority }}
+              </t-tag>
             </div>
-            <t-tag v-if="item.priority" size="small" :theme="getPriorityTheme(item.priority)">
-              {{ item.priority }}
-            </t-tag>
-          </div>
+          </template>
         </div>
 
         <!-- 无结果提示 -->
-        <div v-if="showSearchResults && searchResults.length === 0 && searchIssueNumber" class="search-no-result">
-          <span>暂无数据</span>
+        <div v-if="showSearchResults && flattenedResults.length === 0 && searchIssueNumber" class="search-no-result">
+          <span>暂无数据 - 按 Enter 到工作台查看完整结果或按 N 新建事项</span>
         </div>
 
       </div>
@@ -56,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { useWorkspaceStore } from '@/store/workspace'
@@ -75,6 +82,64 @@ const searchFocused = ref(false)
 const showSearchResults = ref(false)
 const searchResults = ref([])
 let searchTimeout = null
+const searchInput = ref(null)
+const highlightedIndex = ref(-1)
+
+// flattened view helper
+const flattenedResults = computed(() => {
+  return Array.isArray(searchResults.value) ? searchResults.value : []
+})
+
+// grouped by project/space (fallback to '其他')
+const groupedResults = computed(() => {
+  const groupsMap = {}
+  const flat = flattenedResults.value
+  for (const it of flat) {
+    const key = it.projectName || it.spaceName || it.companyName || '其他'
+    if (!groupsMap[key]) groupsMap[key] = []
+    groupsMap[key].push(it)
+  }
+  return Object.keys(groupsMap).map(k => ({ title: k, items: groupsMap[k] }))
+})
+
+const flattenedIndex = (item) => {
+  return flattenedResults.value.indexOf(item)
+}
+
+const escapeHtml = (s = '') => String(s).replace(/[&<>"'`]/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[ch]))
+
+const highlightText = (text, keyword) => {
+  if (!keyword) return escapeHtml(text)
+  try {
+    const k = String(keyword).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const re = new RegExp(`(${k})`, 'ig')
+    return escapeHtml(text).replace(re, '<mark>$1</mark>')
+  } catch (e) {
+    return escapeHtml(text)
+  }
+}
+
+// keyboard handling inside search input
+const handleSearchKeydown = (e) => {
+  if (!showSearchResults.value) return
+  const max = Math.max(0, flattenedResults.value.length - 1)
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    highlightedIndex.value = Math.min(max, Math.max(0, highlightedIndex.value + 1))
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    highlightedIndex.value = Math.max(0, highlightedIndex.value - 1)
+  } else if (e.key === 'Enter') {
+    e.preventDefault()
+    if (highlightedIndex.value >= 0 && flattenedResults.value[highlightedIndex.value]) {
+      handleSelectIssue(flattenedResults.value[highlightedIndex.value])
+    } else {
+      handleDirectSearch()
+    }
+  } else if (e.key === 'Escape') {
+    showSearchResults.value = false
+  }
+}
 
 
 // 通知数据
@@ -330,6 +395,34 @@ const handleSearchBlur = () => {
   }, 200)
 }
 
+// global shortcut: press '/' to focus search (unless focused in an input)
+const onGlobalKey = (e) => {
+  if (e.key === '/' && document.activeElement && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+    e.preventDefault()
+    nextTick(() => {
+      if (searchInput.value && searchInput.value.$el) {
+        // t-input exposes $el; try focus on inner input
+        const el = searchInput.value.$el.querySelector('input')
+        if (el) el.focus()
+      } else if (searchInput.value && searchInput.value.focus) {
+        searchInput.value.focus()
+      }
+    })
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onGlobalKey)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onGlobalKey)
+})
+
+// watch route focus toggling if needed (ensure highlightedIndex reset)
+watch(searchIssueNumber, (v) => {
+  if (!v) highlightedIndex.value = -1
+})
+
 // 输入内容变化时自动搜索
 const handleSearchInput = () => {
   // 清除之前的定时器
@@ -353,6 +446,8 @@ const handleSearchInput = () => {
       const payload = res?.data ?? (Array.isArray(res) ? res : [])
       searchResults.value = payload || []
       showSearchResults.value = true
+      // reset highlighted index
+      highlightedIndex.value = searchResults.value.length > 0 ? 0 : -1
     } catch (error) {
       console.error('搜索事项失败:', error)
       searchResults.value = []
@@ -438,13 +533,13 @@ const getNoticeTypeClass = (type) => {
   left: 0;
   right: 0;
   z-index: 100;
-  height:55px;
-  min-height: 55px;
-  background: rgba(255, 255, 255, 0.8);
+  height: 48px;
+  min-height: 48px;
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 0 10px;
+  padding: 0 var(--spacing-md);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -456,7 +551,7 @@ const getNoticeTypeClass = (type) => {
     align-items: center;
 
     :deep(.app-logo) {
-      padding-right: 24px;
+      padding-right: var(--spacing-md);
       border-right: 1px solid rgba(0, 0, 0, 0.06);
       .space-switch-select {
         min-width: 160px;
@@ -475,7 +570,9 @@ const getNoticeTypeClass = (type) => {
     gap: 12px;
 
     .create-issue-btn {
-      margin-right: 100px;
+      margin-right: calc(var(--spacing-lg) * 1);
+      padding: 6px 10px;
+      font-size: 13px;
     }
 
   }
@@ -498,6 +595,65 @@ const getNoticeTypeClass = (type) => {
   min-height: 100px !important;
   overflow-y: auto !important;
 }
+
+.search-results {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+  padding: 8px;
+  border: 1px solid rgba(0,0,0,0.04);
+  position: absolute;
+  left: 0;
+  top: 54px;
+  z-index: 200;
+}
+.search-group {
+  font-size: 12px;
+  color: #8e8e93;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(0,0,0,0.02);
+}
+.search-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.search-result-item:hover,
+.search-result-item.is-highlighted {
+  background: rgba(0,0,0,0.04);
+}
+.issue-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.issue-no {
+  font-size: 12px;
+  color: #6b6b72;
+  min-width: 60px;
+}
+.issue-summary {
+  font-size: 13px;
+  color: #1f2329;
+}
+.search-no-result {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+  padding: 18px;
+  text-align: center;
+  color: #8e8e93;
+  position: absolute;
+  left: 0;
+  top: 54px;
+  z-index: 200;
+}
+
 
 </style>
 
