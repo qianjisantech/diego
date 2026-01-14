@@ -6,7 +6,7 @@
       <t-input
             ref="searchInput"
             v-model="searchIssueNumber"
-            placeholder="搜索事项单号或者概要（按 / 聚焦）"
+            placeholder="搜索事项单号或者概要"
             clearable
             @focus="handleSearchFocus"
             @blur="handleSearchBlur"
@@ -44,7 +44,7 @@
 
         <!-- 无结果提示 -->
         <div v-if="showSearchResults && flattenedResults.length === 0 && searchIssueNumber" class="search-no-result">
-          <span>暂无数据 - 按 Enter 到工作台查看完整结果或按 N 新建事项</span>
+          <span>暂无数据</span>
         </div>
 
       </div>
@@ -549,6 +549,7 @@ const getNoticeTypeClass = (type) => {
   .header-left {
     display: flex;
     align-items: center;
+    margin-left: 30px;
 
     :deep(.app-logo) {
       padding-right: var(--spacing-md);
@@ -565,13 +566,10 @@ const getNoticeTypeClass = (type) => {
   }
 
   .header-right {
+    margin-right: 40px;
     display: flex;
     align-items: center;
-    gap: 12px;
-
     .create-issue-btn {
-      margin-right: calc(var(--spacing-lg) * 1);
-      padding: 6px 10px;
       font-size: 13px;
     }
 
