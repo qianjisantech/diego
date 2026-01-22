@@ -6,38 +6,40 @@
       <div class="primary-menu">
         <div class="primary-menu-list">
           <div
-            v-for="menu in menuList"
-            :key="menu.value"
-            class="primary-menu-item"
-            :class="{
+              v-for="menu in menuList"
+              :key="menu.value"
+              class="primary-menu-item"
+              :class="{
               'is-active': activeFirstMenu === menu.value,
               'has-submenu': menu.children && menu.children.length > 0
             }"
-            @click="handlePrimaryMenuClick(menu)"
+              @click="handlePrimaryMenuClick(menu)"
           >
-            <t-icon :name="menu.icon" size="22px" />
+            <t-icon :name="menu.icon" size="22px"/>
             <span class="menu-label">{{ menu.label }}</span>
             <div v-if="menu.badge" class="menu-badge">{{ menu.badge }}</div>
+
+          </div>
+          <!-- 底部个人中心区域 - 固定在一级菜单底部，始终显示 -->
+          <div class="sidebar-footer" v-show="true">
+            <!-- 通知图标 -->
+            <div class="footer-notification">
+              <t-icon name="notification" size="20px"/>
+            </div>
+
+            <!-- 用户头像和弹窗 -->
+            <div class="footer-user-info" @click="showUserCenterPopup = true">
+              <t-avatar size="32px" :image="userAvatar" :alt="username">{{ userInitial }}</t-avatar>
+            </div>
+
+            <!-- 用户中心弹窗 -->
+            <UserCenterPopup
+                v-model:visible="showUserCenterPopup"
+            />
           </div>
         </div>
 
-        <!-- 底部个人中心区域 - 固定在一级菜单底部，始终显示 -->
-        <div class="sidebar-footer" v-show="true">
-          <!-- 通知图标 -->
-          <div class="footer-notification">
-            <t-icon name="notification" size="20px" />
-          </div>
 
-          <!-- 用户头像和弹窗 -->
-          <div class="footer-user-info" @click="showUserCenterPopup = true">
-            <t-avatar size="32px" :image="userAvatar" :alt="username">{{ userInitial }}</t-avatar>
-          </div>
-
-          <!-- 用户中心弹窗 -->
-          <UserCenterPopup
-              v-model:visible="showUserCenterPopup"
-          />
-        </div>
       </div>
 
       <!-- 二级菜单栏 -->
@@ -46,10 +48,10 @@
           <!-- 二级菜单顶部返回按钮（仅组织模块显示） -->
           <div v-if="activeFirstMenu === '/space'" class="secondary-footer">
             <t-button
-              theme="default"
-              variant="outline"
-              size="small"
-              @click="handleSecondaryBack"
+                theme="default"
+                variant="outline"
+                size="small"
+                @click="handleSecondaryBack"
             >
               <span>返回组织</span>
             </t-button>
@@ -206,24 +208,24 @@
 
     <!-- 新建文件夹弹窗 -->
     <CreateFolderDialog
-      v-model="showCreateFolderDialog"
-      @submit="handleSubmitCreateFolder"
+        v-model="showCreateFolderDialog"
+        @submit="handleSubmitCreateFolder"
     />
 
     <!-- 发布日志表单弹窗 -->
     <ChangelogFormDialog
-      v-model:visible="showChangelogFormDialog"
-      :changelog="currentChangelog"
-      @success="handleChangelogFormSuccess"
+        v-model:visible="showChangelogFormDialog"
+        :changelog="currentChangelog"
+        @success="handleChangelogFormSuccess"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useWorkspaceStore } from '@/store/workspace'
-import { useUserStore } from '@/store/user'
+import {ref, computed, watch, onMounted, onUnmounted, nextTick} from 'vue'
+import {useRouter, useRoute} from 'vue-router'
+import {useWorkspaceStore} from '@/store/workspace'
+import {useUserStore} from '@/store/user'
 import {
   getMyViews,
   createView,
@@ -329,7 +331,7 @@ const generateViewMenuItems = () => {
       folderViews.forEach(view => {
         items.push({
           value: '/workspace/view/my',
-          query: { id: view.id },
+          query: {id: view.id},
           label: view.name,
           icon: getViewIcon(view.type),
           indent: true,
@@ -346,7 +348,7 @@ const generateViewMenuItems = () => {
   rootViews.forEach(view => {
     items.push({
       value: '/workspace/view/my',
-      query: { id: view.id },
+      query: {id: view.id},
       label: view.name,
       indent: true,
       viewId: view.id,
@@ -396,19 +398,19 @@ const filterMenuByPermission = (menu) => {
   if (menu.children && Array.isArray(menu.children)) {
 
     const filteredChildren = menu.children
-      .map(child => {
-        // 对于子菜单，需要检查权限
-        if (child.permission && !hasPermission(child.permission)) {
+        .map(child => {
+          // 对于子菜单，需要检查权限
+          if (child.permission && !hasPermission(child.permission)) {
 
-          return null
-        }
-        return child
-      })
-      .filter(child => child !== null)
+            return null
+          }
+          return child
+        })
+        .filter(child => child !== null)
 
 
     // 一级菜单即使没有可见的子菜单也要显示（让用户知道这个模块存在）
-    return { ...menu, children: filteredChildren.length > 0 ? filteredChildren : null }
+    return {...menu, children: filteredChildren.length > 0 ? filteredChildren : null}
   }
 
   return menu
@@ -434,16 +436,16 @@ const rawMenuList = computed(() => {
 const menuList = computed(() => {
 
   const filtered = rawMenuList.value
-    .map((menu, index) => {
-      console.log(`[menuList] 过滤菜单 ${index}:`, menu.label, '权限:', menu.permission)
-      const result = filterMenuByPermission(menu)
-      console.log(`[menuList] 过滤结果:`, result ? result.label : 'null (被过滤)')
-      return result
-    })
-    .filter(menu => menu !== null)
+      .map((menu, index) => {
+        console.log(`[menuList] 过滤菜单 ${index}:`, menu.label, '权限:', menu.permission)
+        const result = filterMenuByPermission(menu)
+        console.log(`[menuList] 过滤结果:`, result ? result.label : 'null (被过滤)')
+        return result
+      })
+      .filter(menu => menu !== null)
 
   console.log('[menuList] 过滤后菜单数量:', filtered.length)
-  console.log('[menuList] 过滤后的菜单列表:', filtered.map(m => ({ value: m.value, label: m.label })))
+  console.log('[menuList] 过滤后的菜单列表:', filtered.map(m => ({value: m.value, label: m.label})))
 
   if (filtered.length === 0) {
     console.error('⚠️⚠️⚠️ [menuList] 警告：所有菜单都被过滤了！一级菜单将消失！')
@@ -478,7 +480,7 @@ const currentSecondaryMenu = computed(() => {
       // 如果是"我的视图"菜单项，替换为生成的视图菜单项
       if (index === myViewsIndex) {
         // 添加"我的视图"菜单项（移除图标，设置为不可点击）
-        const { icon, ...myViewsItem } = child
+        const {icon, ...myViewsItem} = child
         myViewsItem.actions = true // 设置为不可点击
         items.push(myViewsItem)
         // 添加视图菜单项（文件夹和视图）
@@ -495,7 +497,7 @@ const currentSecondaryMenu = computed(() => {
           icon: 'filter'
         })
         // 如果是"我的事项"菜单项，添加事项数量
-        const myIssuesItem = { ...child }
+        const myIssuesItem = {...child}
         myIssuesItem.viewCount = workspaceStore.issueCount
         items.push(myIssuesItem)
         // 在"我的事项"之后添加三个菜单项
@@ -525,11 +527,11 @@ const currentSecondaryMenu = computed(() => {
       if (myViewsIndex !== -1 && myIssuesIndex !== -1) {
         // 如果"我的视图"在"我的事项"前面
         if (index === myViewsIndex && myIssuesIndex > myViewsIndex) {
-          items.push({ type: 'divider' })
+          items.push({type: 'divider'})
         }
         // 如果"我的事项"在"我的视图"前面
         else if (index === myIssuesIndex && myViewsIndex > myIssuesIndex) {
-          items.push({ type: 'divider' })
+          items.push({type: 'divider'})
         }
       }
     })
@@ -545,7 +547,7 @@ const currentSecondaryMenu = computed(() => {
 // 根据当前路由初始化激活状态
 const initActiveMenu = (path) => {
 
- if (path.startsWith('/workspace')) {
+  if (path.startsWith('/workspace')) {
     activeFirstMenu.value = 'workspace'
     showSecondary.value = true
     console.log('[路由初始化] 匹配到: 工作台')
@@ -658,9 +660,9 @@ watch(() => route.path, (newPath, oldPath) => {
 
       // 检查是否被其他元素遮挡（多个位置）
       const testPoints = [
-        { x: 40, y: 100, desc: '一级菜单顶部' },
-        { x: 40, y: 300, desc: '一级菜单中部' },
-        { x: 40, y: 500, desc: '一级菜单底部' }
+        {x: 40, y: 100, desc: '一级菜单顶部'},
+        {x: 40, y: 300, desc: '一级菜单中部'},
+        {x: 40, y: 500, desc: '一级菜单底部'}
       ]
 
       console.log('🔍🔍🔍 [遮挡检查] 测试多个位置:')
@@ -684,7 +686,7 @@ watch(() => route.path, (newPath, oldPath) => {
 // 监听二级菜单状态变化，通知父组件
 watch(showSecondary, (newValue) => {
   emit('secondary-change', newValue)
-}, { immediate: true })
+}, {immediate: true})
 
 // 监听 menuList 变化（用于调试）
 watch(menuList, (newValue, oldValue) => {
@@ -700,7 +702,7 @@ watch(menuList, (newValue, oldValue) => {
   }
 
   console.log('[menuList 变化] 菜单列表:', newValue.map(m => m.label))
-}, { deep: true })
+}, {deep: true})
 
 // 暴露获取菜单状态的方法（用于调试）
 const getSidebarState = () => {
@@ -755,9 +757,6 @@ const checkAllContainers = () => {
       console.error(`❌ ${name}: 不存在！`)
     }
   })
-
-  console.log('页面上的一级菜单元素数量:', document.querySelectorAll('.primary-menu-item').length)
-  console.log('====================================================')
 }
 
 // 将方法挂载到 window 对象，方便在控制台调试
@@ -828,8 +827,8 @@ const handlePrimaryMenuClick = async (menu) => {
 
     // 查找相似的路由
     const similarRoutes = layoutChildRoutes.filter(r =>
-      r.path.includes(menu.value.split('/').pop()) ||
-      menu.value.includes(r.path.split('/').pop())
+        r.path.includes(menu.value.split('/').pop()) ||
+        menu.value.includes(r.path.split('/').pop())
     )
     if (similarRoutes.length > 0) {
       console.warn('⚠️⚠️⚠️ [路由检查] 找到相似的路由:')
@@ -888,44 +887,24 @@ const handlePrimaryMenuClick = async (menu) => {
     activeMenu.value = menu.value
   }
 
-  console.log('[最终状态] 激活的一级菜单:', activeFirstMenu.value)
-  console.log('[最终状态] 激活的二级菜单:', activeMenu.value)
-  console.log('[最终状态] 二级菜单展开状态:', showSecondary.value)
-  console.log('[最终状态] 当前路由路径:', route.path)
-
-  // 🔍 再次检查 menuList 的状态
-  console.log('🔍🔍🔍 [点击结束检查] menuList.value.length:', menuList.value.length)
-  console.log('🔍🔍🔍 [点击结束检查] menuList 内容:', menuList.value.map(m => m.label))
 
   // 使用 nextTick 检查 DOM 更新后的状态
   nextTick(() => {
-    console.log('🔍🔍🔍 [DOM 更新后] menuList.value.length:', menuList.value.length)
-    console.log('🔍🔍🔍 [DOM 更新后] 页面上的一级菜单元素数量:', document.querySelectorAll('.primary-menu-item').length)
+
 
     // 🚨 检查关键容器是否存在
     const layoutContainer = document.querySelector('.layout-container')
     const layoutBody = document.querySelector('.layout-body')
     const header = document.querySelector('.header-container')
 
-    console.log('🚨🚨🚨 [容器检查] .layout-container 存在:', !!layoutContainer)
-    console.log('🚨🚨🚨 [容器检查] .layout-body 存在:', !!layoutBody)
-    console.log('🚨🚨🚨 [容器检查] .header-container 存在:', !!header)
-
     if (header) {
       const headerStyles = window.getComputedStyle(header)
       const headerRect = header.getBoundingClientRect()
-      console.log('🚨🚨🚨 [容器检查] .header-container CSS:')
-      console.log('  display:', headerStyles.display)
-      console.log('  visibility:', headerStyles.visibility)
-      console.log('  position:', headerStyles.position)
-      console.log('  zIndex:', headerStyles.zIndex)
-      console.log('  位置:', headerRect.left, headerRect.top, headerRect.right, headerRect.bottom)
     }
 
     if (layoutContainer) {
       const styles = window.getComputedStyle(layoutContainer)
-      console.log('🚨🚨🚨 [容器检查] .layout-container display:', styles.display)
-      console.log('🚨🚨🚨 [容器检查] .layout-container visibility:', styles.visibility)
+
     }
 
     // 检查 CSS 样式
@@ -940,34 +919,13 @@ const handlePrimaryMenuClick = async (menu) => {
     if (primaryMenu) {
       const styles = window.getComputedStyle(primaryMenu)
       const rect = primaryMenu.getBoundingClientRect()
-      console.log('🎨🎨🎨 [CSS 检查] .primary-menu 样式:')
-      console.log('  display:', styles.display)
-      console.log('  visibility:', styles.visibility)
-      console.log('  opacity:', styles.opacity)
-      console.log('  width:', styles.width)
-      console.log('  height:', styles.height)
-      console.log('  transform:', styles.transform)
-      console.log('  position:', styles.position)
-      console.log('  left:', styles.left)
-      console.log('  z-index:', styles.zIndex)
 
-      console.log('📍📍📍 [位置检查] .primary-menu 位置:')
-      console.log('  left:', rect.left, 'px')
-      console.log('  top:', rect.top, 'px')
-      console.log('  right:', rect.right, 'px')
-      console.log('  bottom:', rect.bottom, 'px')
-      console.log('  是否在屏幕内:', rect.left >= 0 && rect.top >= 0 && rect.right <= window.innerWidth)
 
       // 检查第一个菜单项
       const firstItem = primaryMenu.querySelector('.primary-menu-item')
       if (firstItem) {
         const itemRect = firstItem.getBoundingClientRect()
         const itemStyles = window.getComputedStyle(firstItem)
-        console.log('📍📍📍 [菜单项检查] 第一个菜单项:')
-        console.log('  可见性:', itemStyles.visibility)
-        console.log('  不透明度:', itemStyles.opacity)
-        console.log('  位置:', itemRect.left, itemRect.top)
-        console.log('  尺寸:', itemRect.width, 'x', itemRect.height)
       }
     } else {
       console.error('❌ .primary-menu 元素不存在！')
@@ -975,10 +933,7 @@ const handlePrimaryMenuClick = async (menu) => {
 
     if (sidebarMenus) {
       const styles = window.getComputedStyle(sidebarMenus)
-      console.log('🎨🎨🎨 [CSS 检查] .sidebar-menus 样式:')
-      console.log('  display:', styles.display)
-      console.log('  width:', styles.width)
-      console.log('  overflow:', styles.overflow)
+
     }
 
     if (sidebarContainer) {
@@ -1080,9 +1035,9 @@ const loadMyViews = async () => {
         name: '项目管理',
         type: 'folder',
         children: [
-          { id: 'view-gantt', name: '项目进度', type: 'gantt' },
-          { id: 'view-board', name: '任务分配', type: 'board' },
-          { id: 'view-calendar', name: '项目日历', type: 'calendar' }
+          {id: 'view-gantt', name: '项目进度', type: 'gantt'},
+          {id: 'view-board', name: '任务分配', type: 'board'},
+          {id: 'view-calendar', name: '项目日历', type: 'calendar'}
         ]
       }
     ]
@@ -1132,14 +1087,14 @@ const loadMyViews = async () => {
     console.error('获取视图列表失败:', error)
     // 发生错误时也使用假数据
     viewFolders.value = [
-      { id: 'folder-1', name: '项目管理' }
+      {id: 'folder-1', name: '项目管理'}
     ]
     myViews.value = [
-      { id: '100001', name: '项目进度', type: 'gantt', folderId: 'folder-1' },
-      { id: '100002', name: '任务分配', type: 'board', folderId: 'folder-1' },
-      { id: '100003', name: '项目日历', type: 'calendar', folderId: 'folder-1' }
+      {id: '100001', name: '项目进度', type: 'gantt', folderId: 'folder-1'},
+      {id: '100002', name: '任务分配', type: 'board', folderId: 'folder-1'},
+      {id: '100003', name: '项目日历', type: 'calendar', folderId: 'folder-1'}
     ]
-    
+
     // 默认展开所有文件夹
     viewFolders.value.forEach(folder => {
       expandedFolders.value.add(folder.id)
@@ -1191,7 +1146,7 @@ const loadViewFolders = async () => {
     console.log('[加载文件夹列表] 开始')
     // 使用假数据代替 API 调用
     const mockFolders = [
-      { id: 'folder-1', name: '项目管理' }
+      {id: 'folder-1', name: '项目管理'}
     ]
 
     viewFolders.value = mockFolders
@@ -1238,7 +1193,7 @@ const handleEditFolder = async (folder) => {
   const dialog = DialogPlugin.confirm({
     header: '编辑文件夹',
     body: `
-      <div style="padding: 20px 0;">
+      <div style="padding: 5px 0;">
         <div style="margin-bottom: 8px;">文件夹名称</div>
         <input
           id="folder-name-input"
@@ -1382,7 +1337,7 @@ const handleDeleteView = async (view) => {
 
           // 判断是否删除的是当前查看的视图
           const isDeletingCurrent = route.path === '/workspace/view/my' &&
-                                   String(route.query.id) === String(view.id)
+              String(route.query.id) === String(view.id)
 
           // 刷新视图列表
           await loadMyViews()
@@ -1457,7 +1412,7 @@ const handleCreateChangelog = () => {
 
 // 处理编辑发布日志
 const handleEditChangelog = (changelog) => {
-  currentChangelog.value = { ...changelog }
+  currentChangelog.value = {...changelog}
   showChangelogFormDialog.value = true
 }
 
@@ -1477,7 +1432,7 @@ const handleDeleteChangelog = (changelog) => {
 
           // 判断是否删除的是当前查看的日志
           const isDeletingCurrent = route.path === '/changelog' &&
-                                   String(route.query.id) === String(changelog.id)
+              String(route.query.id) === String(changelog.id)
 
           // 刷新发布日志列表
           await loadChangelogList()
@@ -1489,7 +1444,7 @@ const handleDeleteChangelog = (changelog) => {
               const latestLog = changelogList.value[0]
               router.push({
                 path: '/changelog',
-                query: { id: latestLog.id }
+                query: {id: latestLog.id}
               })
             } else {
               // 如果没有日志了，跳转到列表页（无query参数）
@@ -1549,14 +1504,14 @@ const handleChangelogFormSuccess = async (result) => {
     // 触发页面刷新（通过重新导航到同一个路由）
     router.replace({
       path: '/changelog',
-      query: { id: editingId, t: Date.now() }
+      query: {id: editingId, t: Date.now()}
     })
   }
   // 如果是新增操作，跳转到新创建的日志
   else if (!isEdit && result?.data?.id) {
     router.push({
       path: '/changelog',
-      query: { id: result.data.id }
+      query: {id: result.data.id}
     })
   }
 }
@@ -1579,96 +1534,65 @@ onMounted(() => {
 
   // 监听发布日志事件，确保侧边栏列表同步更新
   eventBus.on(EVENTS.CHANGELOG_CREATED, handleChangelogUpdate)
-  eventBus.on(EVENTS.CHANGELOG_UPDATED, handleChangelogUpdate)
-  eventBus.on(EVENTS.CHANGELOG_DELETED, handleChangelogUpdate)
 })
 
-onUnmounted(() => {
-  // 清理事件监听器
-  eventBus.off(EVENTS.CHANGELOG_CREATED, handleChangelogUpdate)
-  eventBus.off(EVENTS.CHANGELOG_UPDATED, handleChangelogUpdate)
-  eventBus.off(EVENTS.CHANGELOG_DELETED, handleChangelogUpdate)
-})
 </script>
 
 <style scoped lang="scss">
-// 侧边栏容器
 .sidebar-container {
   position: fixed;
   left: 0;
-  top: 64px; // 从Header下方开始
+  top: 48px;
   bottom: 0;
-  z-index: 10; // 设置为较低的层级，与主内容区域在同一层级
+  z-index: 10;
   display: flex;
   flex-direction: column;
   background: #fff;
   border-right: 1px solid #e3e6eb;
-  width: 80px;
   transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 2px 0 8px 0 rgba(0, 0, 0, 0.04);
 
-  &.has-secondary {
-    width: 280px;
-  }
-  
-  // 工作台菜单时增加宽度
-  &.has-secondary:has(.secondary-menu.is-workspace) {
-    width: 320px;
-  }
 }
 
-// 菜单区域
 .sidebar-menus {
   flex: 1;
   display: flex;
   overflow: visible; // 改为 visible，确保一级菜单不会被裁剪
   transition: width 0.3s ease;
-  max-height: calc(100vh - 64px); // 限制最大高度，减去Header高度
+  max-height: calc(100vh - 45px); // 限制最大高度，减去Header高度
   box-sizing: border-box;
-  padding-bottom: 10px; // 为底部个人中心区域预留空间
 
   &:not(.has-secondary) {
     width: 80px;
-  }
-
-  &.has-secondary {
-    width: 280px;
-  }
-  
-  // 工作台菜单时增加宽度
-  &.has-secondary:has(.secondary-menu.is-workspace) {
-    width: 320px;
   }
 }
 
 // 一级菜单栏
 .primary-menu {
-  width: 80px;
-  min-width: 80px;
+  width: 59px;
+  min-width: 59px;
   background: #fff;
-  display: flex !important; // 强制显示，防止被覆盖
+  display: flex !important;
   flex-direction: column;
   flex-shrink: 0; // 防止被 flex 布局压缩
   z-index: 1; // 确保在二级菜单之上
   visibility: visible !important; // 强制可见
   opacity: 1 !important; // 强制不透明
-  position: relative !important; // 为底部区域提供定位上下文，强制设置
-  height: 100% !important; // 确保高度完整
+  position: relative !important;
+  height: 100% !important;
+  border-right: 1px solid #e7e7e7; /* ensure divider extends full height including footer */
 
-  // 有二级菜单时添加右边框
-  .sidebar-menus.has-secondary & {
-    border-right: 1px solid #e7e7e7;
-  }
 
   .primary-menu-list {
     flex: 1;
-    padding: 8px 6px 10px 6px !important; // 底部预留10px空间给底部区域，强制设置
+    padding: 2px 2px 2px 2px ;
+    margin-top: 10px;
     overflow-y: auto;
-    min-height: 0; // 允许 flex 子元素收缩
+    min-height: 0;
 
     .primary-menu-item {
       position: relative;
-      min-height: 64px;
+      min-height: 49px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -1697,13 +1621,12 @@ onUnmounted(() => {
         position: absolute;
         top: 4px;
         right: 4px;
-        background: #e34d59;
+        background: #fff;
         color: #fff;
         font-size: 10px;
         padding: 2px 4px;
         border-radius: 8px;
         min-width: 16px;
-        height: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1720,8 +1643,9 @@ onUnmounted(() => {
       }
 
       &.is-active {
-        background: var(--tencent-blue-50);
-        color: var(--tencent-blue-dark);
+        /* 一级菜单激活态：浅蓝背景，深蓝文字与图标 */
+        background: #e6f4ff;
+        color: #0b66c3;
 
         .t-icon {
           color: var(--tencent-blue-dark);
@@ -1733,8 +1657,8 @@ onUnmounted(() => {
 
 // 二级菜单栏
 .secondary-menu {
-  width: 200px;
-  min-width: 200px;
+  width: 170px;
+  min-width: 170px;
   background: #fff;
   display: flex;
   flex-direction: column;
@@ -1745,8 +1669,8 @@ onUnmounted(() => {
 
   // 工作台菜单（我的事项）需要更宽
   &.is-workspace {
-    width: 240px;
-    min-width: 240px;
+    width: 230px;
+    min-width: 230px;
   }
 
   // 视图加载中容器
@@ -1766,7 +1690,7 @@ onUnmounted(() => {
 
   .secondary-menu-list {
     flex: 1;
-    padding: 12px 8px 8px 8px;
+    padding: 16px;
     overflow-y: auto;
 
     // loading 时降低透明度
@@ -1800,7 +1724,7 @@ onUnmounted(() => {
     }
 
     .secondary-menu-item {
-      height: 36px;
+      height: 30px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -1835,7 +1759,7 @@ onUnmounted(() => {
         min-width: 0; // 允许 flex 子元素收缩
       }
 
-        .view-count-badge {
+      .view-count-badge {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -1931,14 +1855,14 @@ onUnmounted(() => {
           &.action-icon-danger {
             &:hover {
               background: rgba(227, 77, 89, 0.1);
-              color: #e34d59;
+              color: #fff;
             }
           }
         }
       }
 
       &:hover {
-        background: #f5f7fa;
+        background: #eef2f6;
         color: #1f2329;
 
         .t-icon {
@@ -1947,12 +1871,29 @@ onUnmounted(() => {
       }
 
       &.is-active {
-        background: #e8e8e8;
+        /* 二级菜单项被点击时使用浅灰背景 */
+        background: #f5f7fa;
         color: #1f2329;
 
         .t-icon {
           color: #1f2329;
         }
+      }
+
+      /* 点击一级菜单时，改变底色以示激活（浅蓝风格） */
+      &.is-active {
+        background: #e6f4ff;
+        color: #0b66c3;
+      }
+
+      &.is-active .t-icon {
+        color: #0b66c3;
+      }
+
+      /* 工作台下激活的二级菜单使用浅蓝背景以便区分 */
+      :root .secondary-menu.is-workspace &.is-active {
+        background: #e6f4ff;
+        color: #0b66c3;
       }
 
       // 有操作按钮的菜单项，左侧留出更多组织
@@ -1989,25 +1930,26 @@ onUnmounted(() => {
   bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
-  width: 80px !important;
-  padding: 12px 0;
+  width: 59px !important;
+  padding: 10px 0;
   background: #fff;
-  border-top: 1px solid #e7e7e7;
+  border-right: 1px solid #e7e7e7;
   display: flex !important;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   z-index: 10;
   flex-shrink: 0; // 防止被压缩
   visibility: visible !important;
   opacity: 1 !important;
 
+
   .footer-notification {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     border-radius: 8px;
     cursor: pointer;
     color: #646a73;
@@ -2023,8 +1965,8 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     cursor: pointer;
     border-radius: 8px;
     transition: all 0.2s;
@@ -2035,6 +1977,8 @@ onUnmounted(() => {
 
     :deep(.t-avatar) {
       cursor: pointer;
+      width: 28px;
+      height: 28px;
     }
   }
 }
@@ -2084,7 +2028,7 @@ onUnmounted(() => {
     width: 64px;
 
     &.has-secondary {
-      width: 248px;
+      width: 200px;
     }
   }
 
@@ -2094,76 +2038,47 @@ onUnmounted(() => {
     }
 
     &.has-secondary {
-      width: 248px;
+      width: 238px;
     }
   }
 
   .primary-menu {
-    width: 64px;
-    min-width: 64px;
+    width: 63px;
+    min-width: 63px;
     flex-shrink: 0; // 防止被压缩
     z-index: 1; // 确保可见
 
-    .primary-menu-list {
-      padding: 6px 4px;
-
-      .primary-menu-item {
-        min-height: 56px;
-        padding: 6px 2px;
-
-        .menu-label {
-          font-size: 11px;
-        }
-      }
-    }
   }
 
-  .secondary-menu {
-    width: 184px;
-    min-width: 184px;
 
-    .secondary-menu-list {
-      .secondary-menu-item {
-        height: 32px;
-        padding: 0 10px;
-
-        .item-label {
-          font-size: 12px;
-        }
-
-        &.is-indent {
-          padding-left: 28px;
-        }
-
-        &.is-double-indent {
-          padding-left: 46px;
-        }
-      }
-    }
+  /* 移动端：让侧栏底部的 footer 在可视区下方撑满高度（从 header 底部到视口底部） */
+  .primary-menu .sidebar-footer {
+    position: absolute !important;
+    top: 64px;
+    bottom: 0 !important;
+    width: 50px !important;
+    height: auto;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
   }
 }
 
-// 手机屏幕 (768px 以下) - Sidebar 完全隐藏或浮动显示
 @media (max-width: 768px) {
   .sidebar-container {
-    // 默认隐藏（可以通过添加移动端菜单按钮来控制显示）
-    // ⚠️ 临时注释掉以便调试 - 防止 Sidebar 在窄屏幕上消失
-    // transform: translateX(-100%);
-    // transition: transform 0.3s ease;
     z-index: 199; // 提高层级，覆盖主内容
     box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
 
-    // 当显示时（通过添加 .mobile-show 类）
     &.mobile-show {
       transform: translateX(0);
     }
 
-    // 移动端默认不展开二级菜单，只显示56px的一级菜单
-    width: 56px;
+    width: 50px;
 
     &.has-secondary {
       width: 100%;
-      max-width: 320px;
+      max-width: 310px;
     }
   }
 
@@ -2179,84 +2094,28 @@ onUnmounted(() => {
   }
 
   .primary-menu {
-    width: 56px;
-    min-width: 56px;
-    flex-shrink: 0; // 防止被压缩
-    z-index: 1; // 确保可见
+    width: 39px;
+    min-width: 39px;
+    flex-shrink: 0;
+    z-index: 1;
 
-    .primary-menu-list {
-      padding: 4px 2px;
-
-      .primary-menu-item {
-        min-height: 48px;
-        padding: 4px 2px;
-        margin-bottom: 4px;
-
-        .t-icon {
-          font-size: 20px;
-        }
-
-        .menu-label {
-          font-size: 10px;
-        }
-
-        .menu-badge {
-          top: 2px;
-          right: 2px;
-          font-size: 9px;
-          padding: 1px 3px;
-          min-width: 14px;
-          height: 14px;
-        }
-      }
-    }
   }
 
-  .secondary-menu {
-    width: calc(100% - 56px);
-    min-width: calc(100% - 56px);
-    max-width: 264px;
-
-    .secondary-menu-list {
-      padding: 8px 6px;
-
-      .secondary-menu-item {
-        height: 36px;
-        padding: 0 8px;
-        font-size: 12px;
-
-        .item-label {
-          font-size: 12px;
-        }
-
-        &.is-indent {
-          padding-left: 24px;
-        }
-
-        &.is-double-indent {
-          padding-left: 40px;
-        }
-      }
-    }
-  }
 }
 
 // 小屏手机 (480px 以下)
-@media (max-width: 480px) {
+@media (max-width: 100px) {
   .sidebar-container {
     &.has-secondary {
-      max-width: 280px;
+      max-width: 90px;
     }
   }
 
   .sidebar-menus {
     &.has-secondary {
-      max-width: 280px;
+      max-width: 210px;
     }
   }
 
-  .secondary-menu {
-    max-width: 224px;
-  }
 }
 </style>
