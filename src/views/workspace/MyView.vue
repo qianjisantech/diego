@@ -29,7 +29,7 @@
 import { ref, computed, watch, onMounted, shallowRef } from 'vue'
 import { useRoute } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { getIssueList } from '@/api/workspace'
+import { getIssueList } from '@/api/console/issue.js'
 
 // 导入不同类型的视图组件
 import GanttView from './views/GanttView.vue'

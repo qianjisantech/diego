@@ -1,103 +1,55 @@
 <template>
   <div class="template-design-page">
     <t-card :bordered="false" class="design-card">
-      <div class="design-body" style="display:flex;gap:16px;padding:2px;">
-        <!-- 左侧：字段面板 -->
-        <div class="palette" style="width:300px;border-right:1px solid #eee;padding-right:12px;display:flex;flex-direction:column;">
-
-          <div style="margin-bottom:8px;">
-            <t-select v-model="selectedTemplateId" style="width:100%" @change="loadFields">
-              <t-option
-                v-for="opt in templateOptions"
-                :key="opt.id"
-                :value="opt.id"
-                :label="opt.name"
-              />
-            </t-select>
-          </div>
-          <h4>字段面板</h4>
-          <div class="palette-list" style="flex:1;overflow:auto;padding-right:4px;">
-            <div v-if="loading" style="padding:12px">加载中...</div>
-            <div v-else>
-              <div
-                v-for="(f, idx) in paletteFields"
-                :key="f.id || `p-${idx}`"
-                class="palette-item"
-                draggable="true"
-                @dragstart="onPaletteDragStart($event, idx)"
-                style="padding:8px;border:1px solid #f0f0f0;margin-bottom:2px;cursor:grab;display:flex;align-items:center;justify-content:flex-start;"
-              >
-                <div style="width:60px;flex-shrink:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;">
-                  <span>{{ f.fieldName }}</span>
-                </div>
-                <div style="flex:1;min-width:0;">
-                  <QInput
-                    v-if="isInputType(f.fieldType)"
-                    :model-value="''"
-                    :placeholder="f.fieldDefaultValue || ''"
-                    disabled
-                    required
-                  />
-                  <t-select v-else-if="(f.fieldType || f.field_type) === 'select'" style="width:100%" disabled>
-                    <t-option label="选项" />
-                  </t-select>
-                  <div v-else style="color:#999;font-size:12px;text-align:left;">{{ getFieldTypeText(f.fieldType || f.field_type) }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 右侧：画布 -->
-        <div class="canvas" style="flex:1;min-height:300px;">
-          <h4>表单布局</h4>
-          <div
-            class="canvas-drop"
-            ref="canvasDropRef"
-            style="min-height:600px;border:1px dashed #e6e6e6;padding:12px;overflow:auto;position:relative;"
-            @dragover.prevent
-            @drop="onCanvasDrop"
-          >
-            <div v-if="canvasFields.length === 0" style="color:#999;padding:24px;text-align:center">
-              拖拽字段到这里开始设计表单
-            </div>
-
-            <div
-              v-for="(item, idx) in canvasFields"
-              :key="item._uid || item.id || `c-${idx}`"
-              class="canvas-item draggable"
-              :data-uid="item._uid || item.id || idx"
-              @dragstart="onCanvasDragStart($event, idx)"
-              @dblclick="returnToPalette(item, idx)"
-              style="position:absolute;display:flex;align-items:center;justify-content:flex-start;padding:8px;border:1px solid #f3f3f3;margin-bottom:1px;background:#fff;min-width:220px;gap:8px;"
-              :style="{ left: (item.x || 0) + 'px', top: (item.y || 0) + 'px' }"
-            >
-              <div style="width:50px;flex-shrink:0;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;">
-              </div>
-              <div style="flex:1;min-width:0;">
-                <QInput
-                 :label=" item.fieldName || item.field_name"
-                  v-if="isInputType(item.fieldType)"
-                  :model-value="item.fieldDefaultValue  || ''"
-                  :placeholder="item.fieldDefaultValue || ''"
-                  disabled
-                  required
-                />
-                <t-select v-else-if="(item.fieldType || item.field_type) === 'select'" style="width:100%" disabled>
-                  <t-option label="选项" />
-                </t-select>
-                <div v-else style="color:#999;font-size:12px;">{{ getFieldTypeText(item.fieldType || item.field_type) }}</div>
-              </div>
-              <!-- 操作按钮已移除：上移/下移/移除 -->
-            </div>
-          </div>
-
-          <div style="margin-top:12px;text-align:right;">
-            <t-button theme="default" @click="$router.back()">返回</t-button>
-            <t-button theme="primary" style="margin-left:8px" :loading="saving" @click="saveLayout">保存布局</t-button>
-          </div>
+      <!-- 页面标题 -->
+      <div class="page-header">
+        <div class="page-actions">
+          <t-button theme="default" @click="goBack">返回</t-button>
+          <t-button theme="primary" :loading="saving" @click="saveLayout">保存布局</t-button>
         </div>
       </div>
+
+      <div class="select-filters">
+        <div class="filter-item">
+          <span class="filter-label">部门：</span>
+          <t-select
+            v-model="selectedDepartment"
+            placeholder="请选择部门"
+            :options="departmentOptions"
+            clearable
+            style="width: 200px"
+          />
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">事项类型：</span>
+          <t-select
+            v-model="selectedItemType"
+            placeholder="请选择事项类型"
+            :options="itemTypeOptions"
+            clearable
+            style="width: 200px"
+          />
+        </div>
+      </div>
+
+      <!-- 使用折叠面板组织内容 -->
+      <t-collapse default-expand-all>
+        <t-collapse-panel header="团队管理自定义">
+
+        </t-collapse-panel>
+
+        <t-collapse-panel header="时间信息">
+
+        </t-collapse-panel>
+
+        <t-collapse-panel header="人员信息">
+
+        </t-collapse-panel>
+
+        <t-collapse-panel header="附件">
+
+        </t-collapse-panel>
+      </t-collapse>
     </t-card>
   </div>
 </template>
@@ -119,6 +71,17 @@ const paletteFields = ref([]) // 所有字段（来自后端）
 const canvasFields = ref([]) // 画布中的字段（可排序）
 const templateOptions = ref([])
 const selectedTemplateId = ref(templateIdFromQuery || '')
+
+const departmentOptions = ref([])
+const selectedDepartment = ref('')
+
+const itemTypeOptions = ref([])
+const selectedItemType = ref('')
+
+const formTitle = ref('')
+const formDescription = ref('')
+const showRequiredMark = ref(true)
+const enableValidation = ref(true)
 
 let dragIndex = null
 let dragFromPalette = null
@@ -296,12 +259,24 @@ onBeforeUnmount(() => {
   try { interact('.draggable').unset() } catch (e) {}
 })
 
+// 返回到自定义模板页面
+const goBack = () => {
+  const enterpriseId = route.params.id
+  router.push(`/enterprise-admin/${enterpriseId}/custom-templates`)
+}
+
 const saveLayout = async () => {
   const useTemplateId = selectedTemplateId.value || templateIdFromQuery
   if (!useTemplateId) {
-    MessagePlugin.error('缺少 templateId')
+    await MessagePlugin.error('请选择模板')
     return
   }
+
+  if (canvasFields.value.length === 0) {
+    await MessagePlugin.warning('请至少添加一个字段到表单中')
+    return
+  }
+
   saving.value = true
   try {
     const fieldsPayload = canvasFields.value.map((f, i) => ({
@@ -319,25 +294,25 @@ const saveLayout = async () => {
       y: f.y || 0
     }))
 
-    await saveTemplateFields({ template_id: String(useTemplateId), fields: fieldsPayload })
-    MessagePlugin.success('布局保存成功')
-    // refresh from server
-    await loadFields(useTemplateId)
+    // 包含表单设置
+    const layoutData = {
+      template_id: String(useTemplateId),
+      fields: fieldsPayload,
+      form_title: formTitle.value,
+      form_description: formDescription.value,
+      show_required_mark: showRequiredMark.value,
+      enable_validation: enableValidation.value
+    }
+
+    await saveTemplateFields(layoutData)
+    goBack()
   } catch (error) {
     console.error(error)
-    MessagePlugin.error('保存失败')
+    await MessagePlugin.error('保存失败，请重试')
   } finally {
     saving.value = false
   }
 }
-
-onMounted(() => {
-  loadTemplateOptions().then(() => {
-    if (selectedTemplateId.value) {
-      loadFields(selectedTemplateId.value)
-    }
-  })
-})
 
 // 字段类型文本映射（本地帮助函数）
 const getFieldTypeText = (type) => {
@@ -367,78 +342,328 @@ const isFieldRequired = (f) => {
 </script>
 
 <style scoped>
-.design-card { max-width: 100%; }
-.design-card { height: calc(100vh - 120px); } /* make the design area fill available viewport height */
-.design-body { height: 100%; } /* let inner body stretch to card height */
-.page-title { font-size: 18px; font-weight: 600; }
-.palette-item { user-select: none; }
-.palette-list {
-  /* ensure the field list scrolls while the select stays fixed */
-  max-height: calc(80vh - 140px);
-  overflow-y: auto;
+.design-card {
+  max-width: 100%;
+  height: calc(100vh - 120px);
 }
 
-/* 增强边框与阴影，提升可见性 */
-.palette-item {
-  border: 1px solid rgba(0, 0, 0, 0.12);
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.page-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2329;
+}
+
+.page-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.select-filters {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e7e7e7;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-label {
+  font-weight: 500;
+  color: #1f2329;
+  white-space: nowrap;
+}
+
+.collapse-content {
+  padding: 16px 0;
+}
+
+/* 字段面板样式 */
+.palette-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e7e7e7;
   border-radius: 6px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.palette-item {
+  user-select: none;
+  cursor: grab;
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
   background: #ffffff;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: all 0.2s ease;
+  padding: 12px;
+}
+
+.palette-item:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.palette-item:active {
+  cursor: grabbing;
+}
+
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.field-name {
+  font-weight: 600;
+  color: #1f2329;
+  font-size: 14px;
+}
+
+.field-type {
+  font-size: 12px;
+  color: #8e8e93;
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.field-preview {
+  min-height: 32px;
+}
+
+.field-placeholder {
+  color: #999;
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+/* 画布样式 */
+.canvas-container {
+  position: relative;
 }
 
 .canvas-drop {
-  border: 1px solid rgba(0,0,0,0.10) !important;
+  border: 1px solid #d4d4d4 !important;
   background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,250,0.98));
-  /* allow the canvas to grow to fill the column and increase visible area (doubled) */
-  flex: 1;
-  min-height: 960px;
+  min-height: 500px;
   border-radius: 8px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
+  padding: 20px;
+  position: relative;
   /* subtle grid background */
   --grid-size: 20px;
   background-image:
-    linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px),
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px),
     linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,250,0.98));
   background-size: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size), auto;
 }
 
-.canvas {
-  flex: 1;
-  min-height: 0; /* allow children to control height via flex */
+.empty-canvas {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #999;
 }
 
-.canvas > h4 { margin: 0 0 8px; }
-.canvas > div:last-child { margin-top: auto; }
+.empty-canvas p {
+  margin: 0;
+  font-size: 14px;
+}
 
 .canvas-item {
-  border: 1px solid rgba(0,0,0,0.12);
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  transition: box-shadow .15s ease, transform .12s ease;
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: all 0.2s ease;
   cursor: move;
-  padding: 12px 14px;
-  min-width: 180px;
+  min-width: 200px;
+  max-width: 300px;
 }
+
 .canvas-item:hover {
   box-shadow: 0 6px 18px rgba(0,0,0,0.12);
   transform: translateY(-2px);
 }
 
-/* draggable handle (optional) */
-.canvas-item .handle {
-  width: 18px;
-  height: 18px;
-  display:inline-block;
-  margin-left:8px;
-  background: transparent;
-  border-radius: 3px;
+.canvas-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  border-radius: 8px 8px 0 0;
 }
 
+.field-label {
+  font-weight: 600;
+  color: #1f2329;
+  font-size: 13px;
+}
+
+.field-type-badge {
+  font-size: 11px;
+  color: #666;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.canvas-item-content {
+  padding: 12px;
+}
+
+.canvas-tips {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e7e7e7;
+}
+
+.canvas-tips p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 设置样式 */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  max-width: 800px;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.setting-item label {
+  min-width: 80px;
+  font-weight: 500;
+  color: #1f2329;
+}
+
+/* 预览样式 */
+.preview-container {
+  max-width: 800px;
+}
+
+.preview-form {
+  border: 1px solid #e7e7e7;
+  border-radius: 8px;
+  padding: 24px;
+  background: #ffffff;
+}
+
+.preview-form h4 {
+  margin: 0 0 8px 0;
+  color: #1f2329;
+  font-size: 18px;
+}
+
+.form-description {
+  color: #666;
+  margin: 0 0 20px 0;
+  font-size: 14px;
+}
+
+.preview-field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.preview-field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.preview-field-item .field-label {
+  font-weight: 500;
+  color: #1f2329;
+  font-size: 14px;
+}
+
+.required-mark {
+  color: #e34d59;
+  margin-left: 4px;
+}
+
+.field-input {
+  min-height: 32px;
+}
+
+.no-preview {
+  text-align: center;
+  color: #999;
+  padding: 40px;
+  font-size: 14px;
+}
+
+.field-type-text {
+  color: #999;
+  font-size: 12px;
+  padding: 8px;
+  background: #f9f9f9;
+  border-radius: 4px;
+  text-align: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+}
 </style>
 
 

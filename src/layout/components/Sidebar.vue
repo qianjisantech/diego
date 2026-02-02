@@ -234,16 +234,12 @@ import {
   createViewFolder,
   updateViewFolder,
   deleteViewFolder
-} from '@/api/workspace'
-import { getCompanyList } from '@/api/company.js'
-import { getChangelogList, deleteChangelog } from '@/api/changelog'
+} from '@/api/console/view.js'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
 import CreateViewDialog from './components/CreateViewDialog.vue'
 import CreateFolderDialog from './components/CreateFolderDialog.vue'
-import ChangelogFormDialog from '@/views/changelog/components/ChangelogFormDialog.vue'
 import { eventBus, EVENTS } from '@/utils/eventBus.js'
 import UserCenterPopup from './UserCenterPopup.vue'
-import tracking from '@/utils/tracking'
 
 const router = useRouter()
 const route = useRoute()

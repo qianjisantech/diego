@@ -145,8 +145,6 @@
       </div>
     </t-drawer>
 
-    <!-- 问题反馈悬浮按钮 -->
-<!--    <FeedbackFloatButton />-->
   </div>
 </template>
 
@@ -154,8 +152,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
-import FeedbackFloatButton from '@/components/FeedbackFloatButton.vue'
-
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
@@ -264,6 +260,7 @@ const menuGroups = [
         key: 'settings',
         label: '企业设置',
             children: [
+              { key: 'item-type-management', label: '事项类型管理', icon: 'list' },
               {
                 key: 'custom-templates',
                 label: '自定义模板',
@@ -272,14 +269,6 @@ const menuGroups = [
                   { key: 'custom-templates', label: '模板列表', icon: 'list' },
                 ]
               },
-              {
-                key: 'template-design',
-                label: '模板设计',
-                icon: 'edit',
-                children: [
-                  { key: 'template-design', label: '模板设计', icon: 'file' },
-                ]
-              }
             ]
       },
 
@@ -321,6 +310,7 @@ const routeMap = {
   'members-list': `/enterprise-admin/${enterpriseId.value}/members`,
   'organization': `/enterprise-admin/${enterpriseId.value}/organization`,
   'custom-templates': `/enterprise-admin/${enterpriseId.value}/custom-templates`,
+  'item-type-management': `/enterprise-admin/${enterpriseId.value}/item-type-management`,
   'template-design': `/enterprise-admin/${enterpriseId.value}/template-design`,
   'enterprise-permissions': `/enterprise-admin/${enterpriseId.value}/enterprise-permissions`,
   'project-permissions': `/enterprise-admin/${enterpriseId.value}/project-permissions`
@@ -340,7 +330,6 @@ const updateActiveMenu = () => {
   const path = route.path
   if (path.includes('/info') || path.endsWith(`/enterprise-admin/${enterpriseId.value}`)) {
     activeMenu.value = 'enterprise-info'
-    // 如果路径只是 /enterprise-admin/:id，跳转到 info
     if (path.endsWith(`/enterprise-admin/${enterpriseId.value}`)) {
       router.push(`/enterprise-admin/${enterpriseId.value}/info`)
     }
@@ -350,6 +339,8 @@ const updateActiveMenu = () => {
     activeMenu.value = 'organization'
   } else if (path.includes('/custom-templates')) {
     activeMenu.value = 'custom-templates'
+  } else if (path.includes('/item-type-management')) {
+    activeMenu.value = 'item-type-management'
   } else if (path.includes('/enterprise-permissions')) {
     activeMenu.value = 'enterprise-permissions'
   } else if (path.includes('/project-permissions')) {
@@ -360,13 +351,6 @@ const updateActiveMenu = () => {
 // 加载企业信息
 const loadEnterpriseInfo = async () => {
   try {
-    // TODO: 调用API获取企业信息
-    // const res = await getEnterpriseInfo(enterpriseId.value)
-    // enterpriseInfo.value = res.data
-    // enterpriseName.value = res.data.name
-    // enterpriseAvatar.value = res.data.avatar || ''
-    
-    // 临时使用默认值（与EnterpriseInfo.vue保持一致）
     enterpriseName.value = '千机伞科技'
     enterpriseAvatar.value = ''
   } catch (error) {

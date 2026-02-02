@@ -243,7 +243,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
-import { getMenuTree, addMenu, updateMenu, deleteMenu } from '@/api/rbac.js'
+import { getMenuTree, addMenu, updateMenu, deleteMenu } from '@/api/admin/rbac.js'
 
 const loading = ref(false)
 const formLoading = ref(false)

@@ -1,0 +1,1 @@
+export  const EnterpriseApi='/enterprise-api'

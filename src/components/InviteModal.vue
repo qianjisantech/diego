@@ -179,13 +179,13 @@ const inviteLink = computed(() => {
   if (!id) id = props.companyId || selectedCompanyId.value || ''
   if (!id) {
     try {
-      const stored = localStorage.getItem('activeCompanyId')
+      const stored = localStorage.getItem('activeEnterpriseId')
       if (stored) id = stored
     } catch (e) {}
     // eslint-disable-next-line no-console
-    console.log('当前邀请链接', `${window.location.origin}/self/invite/${id}`)
+    console.log('当前邀请链接', `${window.location.origin}/enterprise/invite/${id}`)
   }
-  return `${window.location.origin}/self/invite/${id}`
+  return `${window.location.origin}/enterprise/invite/${id}`
 })
 
 const selectLink = () => {

@@ -174,8 +174,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
-import { getRolePage, addRole, updateRole, deleteRole, assignRolePermissions, getRoleMenuIds } from '@/api/rbac.js'
-import { getMenuTree } from '@/api/rbac.js'
+import { getRolePage, addRole, updateRole, deleteRole, assignRolePermissions, getRoleMenuIds } from '@/api/admin/rbac.js'
+import { getMenuTree } from '@/api/admin/rbac.js'
 
 const loading = ref(false)
 const formLoading = ref(false)

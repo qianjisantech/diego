@@ -3,7 +3,7 @@ import { MessagePlugin } from 'tdesign-vue-next'
 import Cookies from 'js-cookie'
 import { useLoadingStore } from '@/store/loading'
 import { objectKeysToSnake, objectKeysToCamel } from './caseConverter'
-import tracking from './tracking'
+
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
@@ -108,9 +108,7 @@ request.interceptors.request.use(
     // 记录请求开始时间（用于计算接口调用耗时）
     config._startTime = Date.now()
     
-    // 如果是埋点请求，在控制台输出以便调试
-    if (config.url && config.url.includes('/tracking/')) {
-    }
+    
     
     // 如果是 /logs 接口，输出详细日志以便排查
     if (config.url && (config.url.includes('/logs') || config.url.includes('/log'))) {
@@ -203,22 +201,8 @@ request.interceptors.response.use(
     if (data && typeof data === 'object') {
         if(!data.success){
             MessagePlugin.error(data.message||'系统异常，请联系管理员')
-            // API调用失败埋点（业务失败）
-            if (url && !url.includes('/tracking/')) {
-              tracking.trackApiCall(url, method, false, statusCode, data.message || '系统异常', duration)
-            }
-        } else {
-          // API调用成功埋点
-          if (url && !url.includes('/tracking/')) {
-            tracking.trackApiCall(url, method, true, statusCode, null, duration)
-          }
         }
       return objectKeysToCamel(data)
-    }
-
-    // API调用成功埋点（非JSON响应）
-    if (url && !url.includes('/tracking/')) {
-      tracking.trackApiCall(url, method, true, statusCode, null, duration)
     }
 
     return data
@@ -235,17 +219,9 @@ request.interceptors.response.use(
       loading.hideLoading()
     }
 
-    // 计算接口调用耗时
-    const duration = error.config?._startTime ? Date.now() - error.config._startTime : null
-    const url = error.config?.url || ''
-    const method = error.config?.method?.toUpperCase() || 'GET'
-    const statusCode = error.response?.status || null
     const errorMessage = error.response?.data?.message || error.message || '请求失败'
 
-    // API调用失败埋点（网络错误或HTTP错误）
-    if (url && !url.includes('/tracking/')) {
-      tracking.trackApiCall(url, method, false, statusCode, errorMessage, duration)
-    }
+    
 
     MessagePlugin.error(errorMessage)
     return Promise.reject(error)

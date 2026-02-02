@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { updateIssue } from '@/api/workspace.js'
+import { updateIssue } from '@/api/console/issue.js'
 
 /**
  * Issue 操作逻辑（行内编辑、快速修改等）

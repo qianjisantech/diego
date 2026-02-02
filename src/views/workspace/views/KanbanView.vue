@@ -125,7 +125,7 @@
 import { ref, computed, defineProps, defineEmits } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
 import FilterDialog from '@/views/workspace/components/issue/FilterDialog.vue'
-import { updateIssue } from '@/api/workspace'
+import { updateIssue } from '@/api/console/issue.js'
 
 const props = defineProps({
   viewData: {

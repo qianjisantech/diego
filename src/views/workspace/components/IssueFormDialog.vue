@@ -268,7 +268,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { getUserList } from '@/api/user'
-import { createIssue, updateIssue } from '@/api/workspace'
+import { createIssue, updateIssue } from '@/api/console/issue.js'
 import { useUserStore } from '@/store/user'
 import RichTextEditor from './RichTextEditor.vue'
 

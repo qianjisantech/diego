@@ -1,14 +1,13 @@
 <template>
   <router-view />
   <GlobalLoading />
-  <SystemUpdateChecker />
 </template>
 
 <script setup>
 import { onMounted } from 'vue'
 import { useUserStore } from '@/store/user'
 import GlobalLoading from '@/components/GlobalLoading.vue'
-import SystemUpdateChecker from '@/components/SystemUpdateChecker.vue'
+
 import { getBrowserInfo, featureDetection } from '@/utils/responsive'
 
 const userStore = useUserStore()

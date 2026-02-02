@@ -12,19 +12,6 @@ const COMPONENT_ALIASES = {
 
 // 固定子路由配置（不在菜单中，但需要路由）
 const FIXED_SUB_ROUTES = {
-  '/changelog': [
-    {
-      path: '/changelog/detail',
-      name: 'ChangelogDetail',
-      component: () => import('../views/changelog/components/ChangelogDetail.vue'),
-      meta: {
-        title: '发布日志详情',
-        requiresAuth: true,
-        hidden: true,  // 不显示在菜单中
-        parentPath: '/changelog'
-      }
-    }
-  ]
 }
 
 /**

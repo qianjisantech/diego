@@ -97,8 +97,8 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { activateCompany } from '@/api/company.js'
-import tracking from '@/utils/tracking'
+import { activateEnterprise } from '@/api/enterprise/enterprise.js'
+
 import InviteModal from '@/components/InviteModal.vue'
 import { eventBus } from '@/utils/eventBus.js'
 
@@ -166,7 +166,7 @@ const userAvatar = computed(() => {
 
 // 企业列表（直接使用 userStore 中的 companies）
 const companyList = computed(() => userStore.userCompanies || [])
-const activeCompanyId = ref('')
+const activeEnterpriseId = ref('')
 const currentEnterprise = ref(null)
 const showSecondaryMenu = ref(false)
 
@@ -184,7 +184,7 @@ const initCompanySelection = () => {
         // try to find server-designated default company first
         const defaultCompany = companyList.value.find(c => c.is_default || c.isDefault)
         const initial = defaultCompany ? defaultCompany : companyList.value[0]
-        activeCompanyId.value = String(initial.id)
+        activeEnterpriseId.value = String(initial.id)
         currentEnterprise.value = initial
         // 确保二级菜单显示（如果弹窗已打开）
         if (props.visible) {
@@ -214,7 +214,7 @@ const handleEnterpriseClick = async (company) => {
   try {
     const res = await activateCompany(company.id)
       if (res && (res.success || res.code === 200)) {
-      activeCompanyId.value = String(company.id)
+      activeEnterpriseId.value = String(company.id)
       currentEnterprise.value = company
       showSecondaryMenu.value = true
       await MessagePlugin.success('已切换企业，正在刷新系统...')
@@ -233,7 +233,7 @@ const handleEnterpriseClick = async (company) => {
       return
     }
     // 回退行为：即使响应非标准也切换本地显示，并更新 user store
-    activeCompanyId.value = String(company.id)
+    activeEnterpriseId.value = String(company.id)
     currentEnterprise.value = company
     showSecondaryMenu.value = true
     try { userStore.setSelectedCompany(company.id) } catch (e) {}
@@ -252,7 +252,7 @@ const handleBack = () => {
 
 // 处理新建企业（在新标签页打开创建页面）
 const handleAddEnterprise = () => {
-  window.open('/self/enterprise', '_blank')
+  window.open('/enterprise/my-list', '_blank')
   emit('update:visible', false)
 }
 
@@ -265,7 +265,7 @@ const handlePersonalSettings = () => {
 // 处理退出登录
 const handleLogout = async () => {
   try {
-    tracking.trackLogout(username.value)
+
     await userStore.logout()
     await MessagePlugin.success('已退出登录')
     router.push('/login')
@@ -315,7 +315,7 @@ watch(() => props.visible, (newVal) => {
   if (newVal) {
     // 如果有已存在的企业数据，立即显示二级菜单和初始化企业选择
     if (companyList.value.length > 0) {
-      activeCompanyId.value = String(companyList.value[0].id)
+      activeEnterpriseId.value = String(companyList.value[0].id)
       currentEnterprise.value = companyList.value[0]
       showSecondaryMenu.value = true
     }
@@ -336,7 +336,7 @@ watch(() => userStore.userCompanies, (newCompanies) => {
   } else {
     // 无企业时，默认选中个人
     isPersonalSelected.value = true
-    activeCompanyId.value = ''
+    activeEnterpriseId.value = ''
     currentEnterprise.value = null
     localSelectedCompany.value = ''
   }

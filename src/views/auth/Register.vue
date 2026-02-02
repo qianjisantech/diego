@@ -196,8 +196,8 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { register, sendVerificationCode } from '@/api/auth.js'
-import tracking from '@/utils/tracking'
+import { register, sendVerificationCode } from '@/api/auth/auth.js'
+
 import AppLogo from '@/components/AppLogo.vue'
 
 const router = useRouter()
@@ -307,14 +307,14 @@ const handleSendCode = async () => {
       // 后端返回失败，拦截器已经显示了错误消息
       console.log('❌ 后端返回失败')
       const errorMessage = response.message || '发送验证码失败'
-      tracking.trackSendVerificationCode(email, false, errorMessage)
+
       return
     }
     
     // 发送成功
     console.log('✅ 验证码发送成功')
 
-    tracking.trackSendVerificationCode(email, true, null)
+
     await MessagePlugin.success(response?.message || '验证码已发送，请查收邮箱')
     
     // 开始倒计时

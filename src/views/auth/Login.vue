@@ -170,7 +170,7 @@ import {ref, reactive, onMounted} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { useUserStore } from '@/store/user.js'
-import tracking from '@/utils/tracking'
+
 import AppLogo from '@/components/AppLogo.vue'
 import Cookies from 'js-cookie'
 
@@ -232,17 +232,13 @@ const handleLogin = async () => {
       password: loginForm.password,
       remember: loginForm.remember
     })
-    // 登录成功埋点
-    tracking.trackLogin(loginForm.email)
-    // 登录尝试成功埋点
-    tracking.trackLoginAttempt(loginForm.email, true, null)
+    
 
     const redirect = route.query.redirect || '/workspace'
     await router.push(redirect)
   } catch (error) {
     const errorMessage = error.message || '登录失败'
-    // 登录失败埋点
-    tracking.trackLoginAttempt(loginForm.email, false, errorMessage)
+    
     await MessagePlugin.error(errorMessage)
   } finally {
     loading.value = false

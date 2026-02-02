@@ -212,7 +212,7 @@ import {
   addDictData,
   updateDictData,
   deleteDictData
-} from '@/api/rbac.js'
+} from '@/api/admin/rbac.js'
 
 const typeLoading = ref(false)
 const dataLoading = ref(false)

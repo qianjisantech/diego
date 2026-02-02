@@ -48,9 +48,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import AppLogo from '@/components/AppLogo.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { getInviteInfo } from '@/api/company.js'
+import { getEnterpriseInviteInfo } from '@/api/console/invite.js'
 import { eventBus } from '@/utils/eventBus.js'
-import { activateCompany } from '@/api/company.js'
+import { activateEnterprise } from '@/api/enterprise/enterprise.js'
 import Cookies from 'js-cookie'
 
 const route = useRoute()
@@ -64,21 +64,21 @@ let mountedId = null
 const loadInvite = async (id) => {
   if (!id) return
   try {
-    const res = await getInviteInfo(id)
+    const res = await getEnterpriseInviteInfo(id)
     const payload = res?.data ?? res
     if (payload) {
       if (payload.invitePersonName) inviterName.value = payload.invitePersonName
-      if (payload.companyName) teamName.value = payload.companyName
-      if (payload.companyId) {
-        document.body.dataset.invitedCompanyId = String(payload.companyId)
+      if (payload.name) teamName.value = payload.name
+      if (payload.id) {
+        document.body.dataset.invitedCompanyId = String(payload.id)
       }
       // If user already logged in, auto-activate company and redirect to workspace
       try {
         const token = Cookies.get('dcp_token')
         if (token && payload.companyId) {
           // attempt to activate company (control panel API)
-          const act = await activateCompany(payload.companyId)
-          if (act && (act.success || act.code === 200)) {
+          const res = await activateEnterprise(payload.companyId)
+          if (res && (res.success )) {
             await MessagePlugin.success('已切换至邀请企业，正在跳转...')
             await router.push('/workspace')
             return
@@ -99,11 +99,9 @@ onMounted(async () => {
   if (route.query.inviter) inviterName.value = String(route.query.inviter)
   if (route.query.team) teamName.value = String(route.query.team)
   await loadInvite(id)
-  // listen for company changes - if company changed and it's the same page, reload for new id
   eventBus.on('company:changed', async (newId) => {
     try {
       if (mountedId && String(newId) !== String(mountedId)) {
-        // if user changed company and we're viewing an invite URL, reload invite info for newId
         mountedId = String(newId)
         await loadInvite(mountedId)
       }
@@ -116,7 +114,7 @@ onUnmounted(() => {
 })
 
 const acceptInvite = async () => {
-  MessagePlugin.success('已加入（模拟）')
+  await MessagePlugin.success('已加入（模拟）')
   // redirect to workspace or login depending on auth; here go to workspace
   setTimeout(() => {
     router.push('/workspace')

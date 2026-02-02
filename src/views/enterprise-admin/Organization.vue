@@ -498,11 +498,6 @@ const handleDeleteDepartment = async (node) => {
 // 加载企业名称
 const loadEnterpriseName = async () => {
   try {
-    // TODO: 调用API获取企业信息
-    // const res = await getEnterpriseInfo(enterpriseId.value)
-    // enterpriseName.value = res.data.name || '企业'
-    
-    // 临时使用默认值（与EnterpriseAdminLayout.vue保持一致）
     enterpriseName.value = '千机伞科技'
   } catch (error) {
     console.error('获取企业信息失败:', error)
@@ -513,11 +508,6 @@ const loadEnterpriseName = async () => {
 // 加载组织架构树
 const loadOrganizationTree = async () => {
   try {
-    // TODO: 调用API获取组织架构
-    // const res = await getOrganizationTree(enterpriseId.value)
-    // treeData.value = res.data || []
-
-    // 临时使用模拟数据
     treeData.value = [
       {
         id: 1,

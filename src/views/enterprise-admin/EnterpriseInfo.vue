@@ -9,43 +9,13 @@
           ref="formRef"
           :data="formData"
           :rules="formRules"
-          label-width="100px"
+          label-width="120px"
           class="form-content"
         >
-          <!-- 企业头像 -->
-          <t-form-item label="企业头像" name="avatar">
-            <div class="avatar-upload">
-              <t-avatar
-                :image="formData.avatar"
-                :alt="formData.name"
-                size="large"
-                class="avatar-preview"
-              >
-                {{ enterpriseInitial }}
-              </t-avatar>
-              <t-upload
-                v-model="uploadFiles"
-                :request-method="handleUpload"
-                accept="image/*"
-                :max="1"
-                :show-progress="false"
-                theme="image"
-                :image-viewer-props="{ closeBtn: true }"
-                @success="handleUploadSuccess"
-              >
-                <template #trigger>
-                  <t-button theme="primary" variant="outline" size="small">
-                    上传企业头像
-                  </t-button>
-                </template>
-              </t-upload>
-            </div>
-          </t-form-item>
-
           <!-- 企业名称 -->
-          <t-form-item label="企业名称" name="name">
+          <t-form-item label="企业名称" name="enterpriseName">
             <t-input
-              v-model="formData.name"
+              v-model="formData.enterpriseName"
               placeholder="请输入企业名称"
               :maxlength="50"
               clearable
@@ -53,31 +23,97 @@
             />
           </t-form-item>
 
-          <!-- 企业简介 -->
-          <t-form-item label="企业简介" name="description">
-            <t-textarea
-              v-model="formData.description"
-              placeholder="介绍一下这个企业"
-              :maxlength="500"
-              :autosize="{ minRows: 4, maxRows: 8 }"
+          <!-- 企业简称 -->
+          <t-form-item label="企业简称" name="shortName">
+            <t-input
+              v-model="formData.shortName"
+              placeholder="请输入企业简称"
+              :maxlength="20"
               clearable
               style="width: 400px"
             />
           </t-form-item>
 
+          <!-- 企业编码 -->
+          <t-form-item label="企业编码" name="enterpriseCode">
+            <t-input
+              v-model="formData.enterpriseCode"
+              placeholder="企业编码"
+              :maxlength="30"
+              clearable
+              :disabled="true"
+              style="width: 400px"
+            />
+          </t-form-item>
+
+
+
+          <!-- 企业描述 -->
+          <t-form-item label="企业描述" name="description">
+            <t-textarea
+              v-model="formData.description"
+              placeholder="介绍一下这个企业"
+              :maxlength="500"
+              :autosize="{ minRows: 3, maxRows: 5 }"
+              clearable
+              style="width: 400px"
+            />
+          </t-form-item>
+
+
+
+
+
           <!-- 确定按钮 -->
           <t-form-item>
             <t-button theme="primary" @click="handleSave">
-              确定
-            </t-button>
-            <t-button theme="default" variant="outline" style="margin-left: 12px" @click="handleReset">
-              重置
+              保存
             </t-button>
           </t-form-item>
         </t-form>
       </div>
 
+      <!-- 更多操作 -->
+      <div class="info-section">
+        <h3 class="section-title">更多操作</h3>
+        
+        <div class="operation-content">
+          <!-- 企业归属 -->
+          <div class="operation-item">
+            <div class="operation-label">企业归属</div>
+            <t-button theme="default" @click="handleTransfer">
+              移交
+            </t-button>
+          </div>
+
+          <!-- 删除企业 -->
+          <div class="operation-item">
+            <div class="operation-label">删除企业</div>
+            <div class="delete-warning">
+              一旦你删除了企业，企业内所有项目、部门、成员，项目中所有内容以及所关联的所思文档都将会被永久删除。这是一个不可恢复的操作，请谨慎对待！
+            </div>
+            <t-button theme="danger" @click="handleDelete">
+              删除企业
+            </t-button>
+          </div>
+        </div>
+      </div>
+
     </t-card>
+
+    <!-- 删除确认对话框 -->
+    <t-dialog
+      v-model:visible="deleteDialogVisible"
+      header="确认删除企业"
+      :confirm-btn="{ content: '确认删除', theme: 'danger' }"
+      :cancel-btn="{ content: '取消' }"
+      @confirm="confirmDelete"
+      @cancel="cancelDelete"
+    >
+      <div class="delete-confirm-content">
+        <p>一旦你删除了企业，企业内所有项目、部门、成员，项目中所有内容以及所关联的所思文档都将会被永久删除。这是一个不可恢复的操作，请谨慎对待！</p>
+      </div>
+    </t-dialog>
   </div>
 </template>
 
@@ -85,79 +121,44 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
-// import { getEnterpriseInfo, updateEnterpriseInfo } from '@/api/enterprise'
+import { getEnterprise, updateEnterprise, deleteEnterprise } from '@/api/enterprise/enterprise.js'
 
 const route = useRoute()
 const formRef = ref(null)
 
 // 企业ID
-const enterpriseId = computed(() => route.params.id)
+const enterpriseId = computed(() => {
+  const id = route.params.id || 1
+  console.log('企业ID:', id)
+  return id
+})
 
 // 表单数据
 const formData = ref({
-  avatar: '',
-  name: '',
+  id: null,
+  enterpriseCode: '',
+  enterpriseName: '',
+  shortName: '',
   description: ''
 })
 
-// 表单初始数据（用于重置）
-const initialFormData = ref({
-  avatar: '',
-  name: '',
-  description: ''
-})
+
 
 // 表单验证规则
 const formRules = {
-  name: [
+  enterpriseName: [
     { required: true, message: '请输入企业名称', type: 'error' },
     { max: 50, message: '企业名称不能超过50个字符', type: 'warning' }
   ],
+  shortName: [
+    { max: 20, message: '企业简称不能超过20个字符', type: 'warning' }
+  ],
+  enterpriseCode: [
+    { max: 30, message: '企业编码不能超过30个字符', type: 'warning' }
+  ],
   description: [
-    { max: 500, message: '企业简介不能超过500个字符', type: 'warning' }
+    { max: 500, message: '企业描述不能超过500个字符', type: 'warning' }
   ]
-}
-
-// 上传文件列表
-const uploadFiles = ref([])
-
-// 企业名称首字母
-const enterpriseInitial = computed(() => {
-  return formData.value.name?.charAt(0)?.toUpperCase() || '企'
-})
-
-// 上传方法
-const handleUpload = async (file) => {
-  // 验证文件类型
-  if (!file.raw?.type.startsWith('image/')) {
-    MessagePlugin.warning('请上传图片文件')
-    return Promise.reject(new Error('请上传图片文件'))
-  }
-
-  // 验证文件大小（限制5MB）
-  if (file.raw?.size > 5 * 1024 * 1024) {
-    MessagePlugin.warning('图片大小不能超过5MB')
-    return Promise.reject(new Error('图片大小不能超过5MB'))
-  }
-
-  // TODO: 实际上传到服务器
-  // 这里先返回本地预览
-  return new Promise((resolve) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      resolve({
-        url: e.target.result
-      })
-    }
-    reader.readAsDataURL(file.raw)
-  })
-}
-
-// 上传成功回调
-const handleUploadSuccess = (context) => {
-  if (context.response?.url) {
-    formData.value.avatar = context.response.url
-  }
 }
 
 // 保存
@@ -166,39 +167,82 @@ const handleSave = async () => {
   if (!valid) return
 
   try {
-    // TODO: 调用API保存企业信息
-    // await updateEnterpriseInfo(enterpriseId.value, formData.value)
-    MessagePlugin.success('保存成功')
-    // 更新初始数据
-    initialFormData.value = { ...formData.value }
+    // 调用API保存企业信息
+    const res = await updateEnterprise(enterpriseId.value, formData.value)
+    if (res.success) {
+      await MessagePlugin.success('保存成功')
+      // 更新成功后重新加载数据
+      await loadEnterpriseInfo()
+    } else {
+      await MessagePlugin.error(res.message || '保存失败')
+    }
   } catch (error) {
     console.error('保存失败:', error)
-    MessagePlugin.error('保存失败，请重试')
+    await MessagePlugin.error('保存失败，请重试')
   }
 }
 
-// 重置
-const handleReset = () => {
-  formData.value = { ...initialFormData.value }
-  formRef.value?.clearValidate()
-  uploadFiles.value = []
+// 删除对话框
+const deleteDialogVisible = ref(false)
+
+// 移交
+const handleTransfer = () => {
+  MessagePlugin.info('移交功能待实现')
+}
+
+// 删除
+const handleDelete = () => {
+  deleteDialogVisible.value = true
+}
+
+// 确认删除
+const confirmDelete = async () => {
+  try {
+    // 调用API删除企业
+    const res = await deleteEnterprise(enterpriseId.value)
+    if (res.success) {
+      await MessagePlugin.success('删除成功')
+      // 跳转到企业列表页面
+      window.location.href = '/enterprise-admin'
+    } else {
+      await MessagePlugin.error(res.message || '删除失败')
+    }
+  } catch (error) {
+    console.error('删除失败:', error)
+    await MessagePlugin.error('删除失败，请重试')
+  }
+}
+
+// 取消删除
+const cancelDelete = () => {
+  deleteDialogVisible.value = false
 }
 
 // 加载企业信息
 const loadEnterpriseInfo = async () => {
   try {
-    // TODO: 调用API获取企业信息
-    // const res = await getEnterpriseInfo(enterpriseId.value)
-    // enterpriseInfo.value = res.data
-    // formData.value = {
-    //   avatar: res.data.avatar || '',
-    //   name: res.data.name || '',
-    //   description: res.data.description || ''
-    // }
+    console.log('开始加载企业信息，ID:', enterpriseId.value)
+    // 调用API获取企业信息
+    const res = await getEnterprise(enterpriseId.value)
+    console.log('loadEnterpriseInfo API返回结果:', res)
     
-    // 临时使用默认值
-    formData.value.name = '千机伞科技'
-    initialFormData.value.name = '千机伞科技'
+    if (res.success) {
+      console.log('企业信息数据:', res.data)
+      // 将API返回的下划线命名转换为小驼峰命名
+      formData.value = {
+        id: res.data.id || null,
+        enterpriseCode: res.data.code || '',
+        enterpriseName: res.data.name || '',
+        shortName: res.data.short_name || '',
+        description: res.data.description || ''
+      }
+
+      console.log('表单数据已更新:', formData.value)
+      MessagePlugin.success('加载成功')
+    } else {
+      console.error('获取企业信息失败:', res.message)
+      MessagePlugin.error(res.message || '获取企业信息失败')
+    }
   } catch (error) {
     console.error('获取企业信息失败:', error)
     MessagePlugin.error('获取企业信息失败')
@@ -206,6 +250,7 @@ const loadEnterpriseInfo = async () => {
 }
 
 onMounted(() => {
+  console.log('组件挂载，开始加载企业信息')
   loadEnterpriseInfo()
 })
 </script>
@@ -261,25 +306,59 @@ onMounted(() => {
 
 .form-content {
   :deep(.t-form-item) {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
 
   :deep(.t-form__label) {
     font-weight: 500;
     color: #1d1d1f;
   }
+}
 
-  .avatar-upload {
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
+.operation-content {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
 
-    .avatar-preview {
-      flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      border: 3px solid rgba(255, 255, 255, 0.8);
-    }
+.operation-item {
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+}
+
+.operation-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 12px;
+}
+
+.delete-warning {
+  font-size: 14px;
+  color: #e34d59;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: rgba(227, 77, 89, 0.08);
+  border-radius: 8px;
+  border-left: 3px solid #e34d59;
+}
+
+.delete-confirm-content {
+  p {
+    margin-bottom: 0;
+    line-height: 1.6;
+    color: #1d1d1f;
   }
 }
 </style>
-

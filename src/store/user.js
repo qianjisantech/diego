@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { eventBus } from '@/utils/eventBus.js'
 import Cookies from 'js-cookie'
-import { login as loginApi, getUserInfo as getUserInfoApi, logout as logoutApi } from '@/api/auth'
+import { login as loginApi, getUserInfo as getUserInfoApi, logout as logoutApi } from '@/api/auth/auth.js'
 import { generateRoutes, menusToSidebar, getDefaultHomePage } from '@/utils/routerHelper'
 import { useWorkspaceStore } from './workspace'
 
@@ -173,7 +173,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       eventBus.emit('company:changed', selectedCompanyId.value)
     } catch (e) {}
-    try { localStorage.setItem('activeCompanyId', String(selectedCompanyId.value)) } catch (e) {}
+    try { localStorage.setItem('activeEnterpriseId', String(selectedCompanyId.value)) } catch (e) {}
     // log whenever selected company changes
     // eslint-disable-next-line no-console
     console.log('selectedCompanyId.value:', selectedCompanyId.value)

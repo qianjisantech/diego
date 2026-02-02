@@ -209,7 +209,7 @@ import {
   deleteConfig,
   getFieldConfigList,
   batchUpdateFieldConfig
-} from '@/api/rbac.js'
+} from '@/api/admin/rbac.js'
 
 const activeTab = ref('system')
 const configLoading = ref(false)

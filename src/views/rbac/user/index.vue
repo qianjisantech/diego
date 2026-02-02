@@ -208,7 +208,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
-import { getUserPage, getRoleList, assignUserRoles, resetPassword, updateUser, deleteUser } from '@/api/rbac.js'
+import { getUserPage, getRoleList, assignUserRoles, resetPassword, updateUser, deleteUser } from '@/api/admin/rbac.js'
 
 const loading = ref(false)
 const roleLoading = ref(false)

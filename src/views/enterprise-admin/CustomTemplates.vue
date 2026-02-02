@@ -107,14 +107,6 @@
               >
                 配置
               </t-button>
-              <t-button
-                theme="success"
-                variant="text"
-                size="small"
-                @click="handleDesignTemplate(row)"
-              >
-                设计模板
-              </t-button>
             </t-space>
           </template>
         </t-table>
@@ -235,132 +227,6 @@
       </t-form>
     </t-dialog>
 
-    <!-- 配置弹窗（由抽屉改为对话框） -->
-    <t-dialog
-      v-model:visible="configDrawerVisible"
-      header="模板配置"
-      width="1000"
-      :confirm-btn="{ content: '保存', theme: 'primary', loading: savingConfig }"
-      class="template-config-dialog"
-      cancel-btn="关闭"
-      @close="configDrawerVisible = false"
-      @confirm="handleSaveConfig"
-      @cancel="handleCancelConfig"
-    >
-      <div class="config-content">
-        <div v-if="configLoading" class="loading-state">
-          <t-loading size="large" text="加载中..." />
-        </div>
-        <div v-else >
-          <div class="config-toolbar" style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-            <t-button theme="primary" size="small" @click="addNewField">新增字段</t-button>
-          </div>
-          <t-table
-            :data="templateFields"
-            :columns="fieldColumns"
-            row-key="id"
-            :loading="false"
-            hover
-            stripe
-            :pagination="{}"
-            size="medium"
-          >
-            <template #fieldName="{ row }">
-              <div v-if="row._isNew || row._isEditing">
-                <t-input v-model="row.fieldName" size="small" placeholder="字段名称" />
-              </div>
-              <div v-else>{{ row.fieldName }}</div>
-            </template>
-
-            <template #fieldCode="{ row }">
-              <div v-if="row._isNew || row._isEditing">
-                <t-input v-model="row.fieldCode" size="small" placeholder="字段编码" />
-              </div>
-              <div v-else>{{ row.fieldCode }}</div>
-            </template>
-
-            <template #isRequired="{ row }">
-              <div v-if="row._isNew || row._isEditing">
-                <t-switch v-model="row.isRequired" size="small" />
-              </div>
-              <div v-else>
-                <t-tag :theme="row.isRequired ? 'danger' : 'default'" variant="light" size="small">
-                  {{ row.isRequired ? '是' : '否' }}
-                </t-tag>
-              </div>
-            </template>
-
-            <template #isEdit="{ row }">
-              <div v-if="row._isNew || row._isEditing">
-                <t-switch v-model="row.isEdit" size="small" />
-              </div>
-              <div v-else>
-                <t-tag
-                  :theme="row.isEdit ? 'success' : 'default'"
-                  variant="light"
-                  size="small"
-                >
-                  {{ row.isEdit ? '是' : '否' }}
-                </t-tag>
-              </div>
-            </template>
-
-            <template #fieldType="{ row }">
-              <div v-if="row._isNew || row._isEditing">
-                <t-select v-model="row.fieldType" size="small" style="width:120px">
-                  <t-option value="text" label="文本" />
-                  <t-option value="input" label="输入框" />
-                  <t-option value="textarea" label="多行文本" />
-                  <t-option value="select" label="下拉选择" />
-                  <t-option value="radio" label="单选" />
-                  <t-option value="checkbox" label="多选" />
-                  <t-option value="date" label="日期" />
-                  <t-option value="number" label="数字" />
-                </t-select>
-              </div>
-              <div v-else>
-                <t-tag theme="primary" variant="light" size="small">
-                  {{ getFieldTypeText(row.fieldType) }}
-                </t-tag>
-              </div>
-            </template>
-
-            <template #fieldDefaultValue="{ row }">
-              <div v-if="row._isNew || row._isEditing">
-                <t-input v-model="row.fieldDefaultValue" size="small" placeholder="默认值" />
-              </div>
-              <div v-else>
-                <span class="default-value">{{ row.fieldDefaultValue || '-' }}</span>
-              </div>
-            </template>
-
-            <template #promptContent="{ row }">
-              <div v-if="row._isNew || row._isEditing">
-                <t-input v-model="row.promptContent" size="small" placeholder="提示内容" />
-              </div>
-              <div v-else>{{ row.promptContent }}</div>
-            </template>
-
-            <!-- position column removed per request -->
-            
-            <template #operation="{ row }">
-              <t-space size="small">
-                <template v-if="row._isNew || row._isEditing">
-                  <t-button theme="default" variant="text" size="small" @click="handleCancelEditField(row)">取消</t-button>
-                  <t-button theme="primary" variant="text" size="small" @click="handleSaveField(row)">保存</t-button>
-                </template>
-                <template v-else>
-                  <t-button theme="primary" variant="text" size="small" @click="handleEditField(row)">编辑</t-button>
-                  <t-popconfirm content="确定要删除该字段吗？" placement="top" @confirm="handleDeleteField(row)">
-                    <t-button theme="danger" variant="text" size="small">删除</t-button>
-                  </t-popconfirm>
-                </template>
-              </t-space>
-            </template>
-          </t-table>
-        </div>
-      </div>
-    </t-dialog>
   </div>
 </template>
 
@@ -406,67 +272,6 @@ const editLoading = ref(false)
 const editFormRef = ref(null)
 const editingTemplateId = ref(null)
 
-// 配置抽屉
-const configDrawerVisible = ref(false)
-const configLoading = ref(false)
-const configuringTemplateId = ref(null)
-const templateFields = ref([])
-const isAddingField = ref(false)
-const savingField = ref(false)
-const savingConfig = ref(false)
-
-// 字段表格列配置
-const fieldColumns = [
-  {
-    colKey: 'fieldName',
-    title: '字段名称',
-    width: 160,
-    ellipsis: true
-  },
-  {
-    colKey: 'fieldCode',
-    title: '字段编码',
-    width: 160,
-    ellipsis: true
-  },
-  {
-    colKey: 'fieldType',
-    title: '字段类型',
-    width: 120,
-    align: 'center'
-  },
-  {
-    colKey: 'fieldDefaultValue',
-    title: '默认值',
-    width: 130,
-    ellipsis: true
-  },
-  {
-    colKey: 'isRequired',
-    title: '是否必填',
-    width: 100,
-    align: 'center'
-  },
-  {
-    colKey: 'isEdit',
-    title: '是否可编辑',
-    width: 120,
-    align: 'center'
-  },
-  {
-    colKey: 'promptContent',
-    title: '提示内容',
-    width: 200,
-    ellipsis: true
-  },
-  // position column removed
-  {
-    colKey: 'operation',
-    title: '操作',
-    width: 140,
-    fixed: 'right'
-  }
-]
 
 // 新建模板表单
 const createForm = ref({
@@ -732,41 +537,13 @@ const handleEdit = async (row) => {
 }
 
 // 配置模板
-const handleConfigure = async (row) => {
-  configuringTemplateId.value = row.id
-  configDrawerVisible.value = true
-
-  try {
-    const res = await getTemplateFields(row.id)
-    const data = res.data || []
-    templateFields.value = data
-  } catch (error) {
-    console.error('获取模板字段失败:', error)
-    MessagePlugin.error('获取模板字段失败')
-    templateFields.value = []
-  }
+const handleConfigure = (row) => {
+  if (!row) return
+  // 跳转到模板设计页面
+  router.push({ path: `/enterprise-admin/${enterpriseId.value}/template-design`, query: { templateId: row.id } })
 }
 
 // 新增字段
-const addNewField = () => {
-  if (isAddingField.value) return
-  const draft = {
-    id: undefined,
-    fieldName: '',
-    fieldCode: '',
-    fieldType: 'text',
-    fieldDefaultValue: '',
-    isRequired: false,
-    isEdit: false,
-    promptContent: '',
-    // position removed
-    _isNew: true
-  }
-  // 记录所属模板（便于后续 payload 构建）
-  draft.templateId = configuringTemplateId.value
-  templateFields.value.unshift(draft)
-  isAddingField.value = true
-}
 
 // 取消新增
 const cancelNewField = () => {

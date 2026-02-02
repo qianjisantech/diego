@@ -23,15 +23,15 @@ export const staticRoutes = [
   },
 
   {
-    path: '/self/enterprise',
-    name: 'SelfEnterprisesAlt',
-    component: () => import('@/views/enterprise/SelfEnterprises.vue'),
+    path: '/enterprise/my-list',
+    name: 'EnterprisesMyList',
+    component: () => import('@/views/enterprise/MyEnterprises.vue'),
     meta: { title: '我的企业', requiresAuth: true }
   },
   {
-    path: '/self/enterprise/create',
-    name: 'SelfEnterpriseCreate',
-    component: () => import('@/views/enterprise/SelfEnterpriseCreate.vue'),
+    path: '/enterprise/create',
+    name: 'EnterpriseCreate',
+    component: () => import('@/views/enterprise/EnterpriseCreate.vue'),
     meta: { title: '新建企业', requiresAuth: true }
   },
   {
@@ -66,6 +66,12 @@ export const staticRoutes = [
         name: 'EnterpriseCustomTemplates',
         component: () => import('@/views/enterprise-admin/CustomTemplates.vue'),
         meta: { title: '自定义模板', requiresAuth: true }
+      },
+      {
+        path: 'item-type-management',
+        name: 'EnterpriseItemTypeManagement',
+        component: () => import('@/views/enterprise-admin/ItemTypeManagement.vue'),
+        meta: { title: '事项类型管理', requiresAuth: true }
       },
       {
         path: 'template-design',
@@ -204,7 +210,7 @@ export const staticRoutes = [
   ,
   // Invite page - public
   {
-    path: '/self/invite/:id',
+    path: '/enterprise/invite/:id',
     name: 'Invite',
     component: () => import('@/views/invite/Invite.vue'),
     meta: { title: '邀请加入', requiresAuth: false }

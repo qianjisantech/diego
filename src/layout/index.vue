@@ -17,9 +17,6 @@
         </div>
       </div>
     </div>
-
-<!--    &lt;!&ndash; 问题反馈悬浮按钮 &ndash;&gt;-->
-<!--    <FeedbackFloatButton />-->
   </div>
 </template>
 
@@ -28,7 +25,6 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import Header from './components/Header.vue'
-import FeedbackFloatButton from '@/components/FeedbackFloatButton.vue'
 import { useUserStore } from '@/store/user'
 
 const userStore = useUserStore()
