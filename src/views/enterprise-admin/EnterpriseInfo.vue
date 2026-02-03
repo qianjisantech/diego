@@ -233,19 +233,19 @@ const loadEnterpriseInfo = async () => {
         id: res.data.id || null,
         enterpriseCode: res.data.code || '',
         enterpriseName: res.data.name || '',
-        shortName: res.data.short_name || '',
+        shortName: res.data.shortName || '',
         description: res.data.description || ''
       }
 
       console.log('表单数据已更新:', formData.value)
-      MessagePlugin.success('加载成功')
+      await MessagePlugin.success('加载成功')
     } else {
       console.error('获取企业信息失败:', res.message)
-      MessagePlugin.error(res.message || '获取企业信息失败')
+      await MessagePlugin.error(res.message || '获取企业信息失败')
     }
   } catch (error) {
     console.error('获取企业信息失败:', error)
-    MessagePlugin.error('获取企业信息失败')
+    await MessagePlugin.error('获取企业信息失败')
   }
 }
 

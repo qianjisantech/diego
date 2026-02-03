@@ -260,7 +260,7 @@ const menuGroups = [
         key: 'settings',
         label: '企业设置',
             children: [
-              { key: 'item-type-management', label: '事项类型管理', icon: 'list' },
+              { key: 'item-type-management', label: '事项类型管理', icon: 'checklist' },
               {
                 key: 'custom-templates',
                 label: '自定义模板',
@@ -274,20 +274,20 @@ const menuGroups = [
 
     ]
   },
-  {
-    key: 'other',
-    label: null,
-    items: [
-      {
-        key: 'permissions',
-        label: '权限',
-        children: [
-          { key: 'enterprise-permissions', label: '企业权限', icon: 'lock-on' },
-          { key: 'project-permissions', label: '项目权限', icon: 'lock-on' }
-        ]
-      }
-    ]
-  }
+  // {
+  //   key: 'other',
+  //   label: null,
+  //   items: [
+  //     {
+  //       key: 'permissions',
+  //       label: '权限',
+  //       children: [
+  //         { key: 'enterprise-permissions', label: '企业权限', icon: 'lock-on' },
+  //         { key: 'project-permissions', label: '项目权限', icon: 'lock-on' }
+  //       ]
+  //     }
+  //   ]
+  // }
 ]
 
 // 菜单状态
