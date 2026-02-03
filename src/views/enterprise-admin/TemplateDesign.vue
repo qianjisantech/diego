@@ -88,7 +88,6 @@ let dragFromPalette = null
 const canvasDropRef = ref(null)
 
 import interact from 'interactjs'
-import QInput from '@/components/QInput/index.vue'
 
 // (removed groupedFields - using paletteFields flat list)
 

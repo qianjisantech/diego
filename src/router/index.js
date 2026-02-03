@@ -154,30 +154,30 @@ export const staticRoutes = [
         component: () => import('@/views/rbac/config/index.vue'),
         meta: { title: '配置管理', requiresAuth: true }
       },
-      {
-        path: 'announcement',
-        name: 'AdminAnnouncement',
-        component: () => import('@/views/announcement/Announcement.vue'),
-        meta: { title: '公告', requiresAuth: true }
-      },
-      {
-        path: 'changelog',
-        name: 'AdminChangelog',
-        component: () => import('@/views/changelog/Changelog.vue'),
-        meta: { title: '发布日志', requiresAuth: true }
-      },
-      {
-        path: 'changelog/detail',
-        name: 'AdminChangelogDetail',
-        component: () => import('@/views/changelog/components/ChangelogDetail.vue'),
-        meta: { title: '发布日志详情', requiresAuth: true, hidden: true }
-      },
-      {
-        path: 'records',
-        name: 'AdminRecords',
-        component: () => import('@/views/records/RecordsManagement.vue'),
-        meta: { title: '记录管理', requiresAuth: true, icon: 'chart-line' }
-      }
+      // {
+      //   path: 'announcement',
+      //   name: 'AdminAnnouncement',
+      //   component: () => import('@/views/announcement/Announcement.vue'),
+      //   meta: { title: '公告', requiresAuth: true }
+      // },
+      // {
+      //   path: 'changelog',
+      //   name: 'AdminChangelog',
+      //   component: () => import('@/views/changelog/Changelog.vue'),
+      //   meta: { title: '发布日志', requiresAuth: true }
+      // },
+      // {
+      //   path: 'changelog/detail',
+      //   name: 'AdminChangelogDetail',
+      //   component: () => import('@/views/changelog/components/ChangelogDetail.vue'),
+      //   meta: { title: '发布日志详情', requiresAuth: true, hidden: true }
+      // },
+      // {
+      //   path: 'records',
+      //   name: 'AdminRecords',
+      //   component: () => import('@/views/records/RecordsManagement.vue'),
+      //   meta: { title: '记录管理', requiresAuth: true, icon: 'chart-line' }
+      // }
     ]
   },
   {
