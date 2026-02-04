@@ -81,9 +81,9 @@ export const useUserStore = defineStore('user', () => {
         // 保存角色
         roles.value = data.roles || []
 
-        // 保存组织（兼容 profile 返回的 companies 字段）
-        userCompanies.value = data.companies  || []
-        // 如果后端返回组织列表并且未设置 selectedCompanyId，直接从 companies 字段中查找默认企业
+        // 保存组织（兼容 profile 返回的 enterprises 字段）
+        userCompanies.value = data.enterprises || []
+        // 如果后端返回组织列表并且未设置 selectedCompanyId，直接从 enterprises 字段中查找默认企业
         if ((!selectedCompanyId.value || selectedCompanyId.value === '') && Array.isArray(userCompanies.value) && userCompanies.value.length > 0) {
           const defaultCompany = userCompanies.value.find(c => c.is_default || c.isDefault) || userCompanies.value[0]
           if (defaultCompany?.id) {
@@ -177,7 +177,6 @@ export const useUserStore = defineStore('user', () => {
     // log whenever selected company changes
     // eslint-disable-next-line no-console
     console.log('selectedCompanyId.value:', selectedCompanyId.value)
-    console.log('userStore.selectedCompanyId:', userStore.selectedCompanyId)
     // expose to global for debug/externals
     try { window.__selectedCompanyId = selectedCompanyId.value } catch (e) {}
   }

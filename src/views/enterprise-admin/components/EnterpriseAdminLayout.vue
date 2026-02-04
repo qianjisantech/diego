@@ -152,6 +152,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
+import { getEnterprise } from '@/api/enterprise/enterprise.js'
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
@@ -351,8 +352,11 @@ const updateActiveMenu = () => {
 // 加载企业信息
 const loadEnterpriseInfo = async () => {
   try {
-    enterpriseName.value = '千机伞科技'
-    enterpriseAvatar.value = ''
+    const res = await getEnterprise(enterpriseId.value)
+    if (res.success) {
+      enterpriseName.value = res.data.name || ''
+      enterpriseAvatar.value = res.data.avatar || ''
+    }
   } catch (error) {
     console.error('获取企业信息失败:', error)
   }
@@ -361,11 +365,19 @@ const loadEnterpriseInfo = async () => {
 // 监听路由变化
 watch(() => route.path, () => {
   updateActiveMenu()
+  // 存储企业ID到用户store
+  if (enterpriseId.value) {
+    userStore.setSelectedCompany(enterpriseId.value)
+  }
 })
 
 onMounted(() => {
   updateActiveMenu()
   loadEnterpriseInfo()
+  // 初始化时存储企业ID到用户store
+  if (enterpriseId.value) {
+    userStore.setSelectedCompany(enterpriseId.value)
+  }
 })
 </script>
 

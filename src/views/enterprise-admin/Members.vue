@@ -117,6 +117,63 @@
         </t-table>
       </div>
     </t-card>
+
+    <!-- 添加成员对话框 -->
+    <t-dialog
+      v-model:visible="addMemberDialogVisible"
+      header="添加成员"
+      :confirm-btn="{ content: '确定', theme: 'primary', loading: submitLoading }"
+      :cancel-btn="{ content: '取消' }"
+      width="500px"
+      @confirm="handleSaveMember"
+      @cancel="handleCancelAdd"
+    >
+      <t-form
+        ref="addMemberFormRef"
+        :data="addMemberForm"
+        :rules="addMemberFormRules"
+        label-width="80px"
+        @submit="handleSaveMember"
+      >
+        <t-form-item label="姓名" name="name">
+          <t-input
+            v-model="addMemberForm.name"
+            placeholder="请输入姓名"
+            :maxlength="50"
+            clearable
+          />
+        </t-form-item>
+
+        <t-form-item label="邮箱" name="email">
+          <t-input
+            v-model="addMemberForm.email"
+            placeholder="请输入邮箱"
+            :maxlength="100"
+            clearable
+          />
+        </t-form-item>
+
+        <t-form-item label="角色" name="role">
+          <t-select
+            v-model="addMemberForm.role"
+            placeholder="请选择角色"
+            clearable
+          >
+            <t-option value="admin" label="管理员" />
+            <t-option value="member" label="成员" />
+          </t-select>
+        </t-form-item>
+
+        <t-form-item label="部门" name="department">
+          <t-input
+            v-model="addMemberForm.department"
+            placeholder="请输入部门"
+            :maxlength="50"
+            clearable
+          />
+        </t-form-item>
+      </t-form>
+    </t-dialog>
   </div>
 </template>
 
@@ -124,7 +181,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
-// import { getMembersList, removeMember } from '@/api/enterprise'
+import { getEnterpriseMemberPage, deleteEnterpriseMember, createEnterpriseMember } from '@/api/enterprise/enterprisemember.js'
 
 const route = useRoute()
 
@@ -150,6 +207,38 @@ const pagination = ref({
   pageSize: 10,
   total: 0
 })
+
+// 添加成员对话框
+const addMemberDialogVisible = ref(false)
+const addMemberFormRef = ref(null)
+const submitLoading = ref(false)
+
+// 添加成员表单
+const addMemberForm = ref({
+  name: '',
+  email: '',
+  role: 'member',
+  department: ''
+})
+
+// 添加成员表单验证规则
+const addMemberFormRules = {
+  name: [
+    { required: true, message: '请输入姓名', type: 'error' },
+    { max: 50, message: '姓名不能超过50个字符', type: 'warning' }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱', type: 'error' },
+    { email: true, message: '请输入正确的邮箱格式', type: 'warning' },
+    { max: 100, message: '邮箱不能超过100个字符', type: 'warning' }
+  ],
+  role: [
+    { required: true, message: '请选择角色', type: 'error' }
+  ],
+  department: [
+    { max: 50, message: '部门不能超过50个字符', type: 'warning' }
+  ]
+}
 
 // 表格列配置
 const columns = [
@@ -246,7 +335,47 @@ const handlePageSizeChange = (size) => {
 
 // 添加成员
 const handleAddMember = () => {
-  MessagePlugin.info('添加成员功能开发中')
+  addMemberForm.value = {
+    name: '',
+    email: '',
+    role: 'member',
+    department: ''
+  }
+  addMemberDialogVisible.value = true
+}
+
+// 保存成员
+const handleSaveMember = async () => {
+  const valid = await addMemberFormRef.value?.validate()
+  if (!valid) return
+
+  submitLoading.value = true
+  try {
+    const res = await createEnterpriseMember(addMemberForm.value)
+    if (res.success) {
+      await MessagePlugin.success('添加成功')
+      addMemberDialogVisible.value = false
+      loadMembersList()
+    } else {
+      await MessagePlugin.error(res.message || '添加失败')
+    }
+  } catch (error) {
+    console.error('添加成员失败:', error)
+    await MessagePlugin.error('添加失败，请重试')
+  } finally {
+    submitLoading.value = false
+  }
+}
+
+// 取消添加
+const handleCancelAdd = () => {
+  addMemberDialogVisible.value = false
+  addMemberForm.value = {
+    name: '',
+    email: '',
+    role: 'member',
+    department: ''
+  }
 }
 
 // 编辑成员
@@ -257,10 +386,13 @@ const handleEdit = (row) => {
 // 移除成员
 const handleRemove = async (row) => {
   try {
-    // TODO: 调用API移除成员
-    // await removeMember(enterpriseId.value, row.id)
-    MessagePlugin.success('移除成功')
-    loadMembersList()
+    const res = await deleteEnterpriseMember(row.id)
+    if (res.success) {
+      MessagePlugin.success('移除成功')
+      loadMembersList()
+    } else {
+      MessagePlugin.error(res.message || '移除失败')
+    }
   } catch (error) {
     console.error('移除失败:', error)
     MessagePlugin.error('移除失败，请重试')
@@ -271,54 +403,23 @@ const handleRemove = async (row) => {
 const loadMembersList = async () => {
   loading.value = true
   try {
-    // TODO: 调用API获取成员列表
-    // const res = await getMembersList(enterpriseId.value, {
-    //   page: pagination.value.current,
-    //   pageSize: pagination.value.pageSize,
-    //   name: filterForm.value.name,
-    //   email: filterForm.value.email,
-    //   status: filterForm.value.status
-    // })
-    // membersList.value = res.data.list || []
-    // pagination.value.total = res.data.total || 0
-
-    // 临时使用模拟数据
-    membersList.value = [
-      {
-        id: 1,
-        name: '张三',
-        email: 'zhangsan@example.com',
-        avatar: '',
-        role: '管理员',
-        department: '技术部',
-        status: 'active',
-        joinTime: '2024-01-15 10:30:00'
-      },
-      {
-        id: 2,
-        name: '李四',
-        email: 'lisi@example.com',
-        avatar: '',
-        role: '成员',
-        department: '产品部',
-        status: 'active',
-        joinTime: '2024-02-20 14:20:00'
-      },
-      {
-        id: 3,
-        name: '王五',
-        email: 'wangwu@example.com',
-        avatar: '',
-        role: '成员',
-        department: '设计部',
-        status: 'pending',
-        joinTime: '2024-03-10 09:15:00'
-      }
-    ]
-    pagination.value.total = 3
+    const res = await getEnterpriseMemberPage({
+      enterpriseId: enterpriseId.value,
+      current: pagination.value.current,
+      size: pagination.value.size,
+      name: filterForm.value.name,
+      email: filterForm.value.email,
+      status: filterForm.value.status
+    })
+    if (res.success) {
+      membersList.value = res.data.list || []
+      pagination.value.total = res.data.total || 0
+    } else {
+      await MessagePlugin.error(res.message || '获取成员列表失败')
+    }
   } catch (error) {
     console.error('获取成员列表失败:', error)
-    MessagePlugin.error('获取成员列表失败')
+    await MessagePlugin.error('获取成员列表失败')
   } finally {
     loading.value = false
   }

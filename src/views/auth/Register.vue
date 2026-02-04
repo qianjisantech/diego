@@ -196,8 +196,8 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { register, sendVerificationCode } from '@/api/auth/auth.js'
-
+import { register } from '@/api/auth/auth.js'
+import {sendCode } from '@/api/common/email.js'
 import AppLogo from '@/components/AppLogo.vue'
 
 const router = useRouter()
@@ -299,13 +299,15 @@ const handleSendCode = async () => {
   codeLoading.value = true
 
   try {
-    const response = await sendVerificationCode(email)
+    const sendEmailPayload = reactive({
+       email: email,
+    })
+    const response = await sendCode(sendEmailPayload)
     console.log('✅ 验证码发送响应:', response)
     
     // 检查后端响应
     if (response && response.success === false) {
-      // 后端返回失败，拦截器已经显示了错误消息
-      console.log('❌ 后端返回失败')
+
       const errorMessage = response.message || '发送验证码失败'
 
       return

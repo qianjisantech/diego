@@ -1,64 +1,46 @@
 import request from '@/utils/request.js'
+import { useUserStore } from '@/store/user'
 
-/**
- * 创建事项类型
- * @param {object} data - 事项类型数据
- * @returns {Promise}
- */
+const api = '/enterprise-api/issue-item-type'
+
 export function createIssueItemType(data) {
+  const userStore = useUserStore()
+  const requestData = {
+    ...data,
+    enterpriseId: userStore.selectedCompanyId
+  }
   return request({
-    url: '/console/issue-item-type',
+    url: api,
     method: 'post',
-    data
+    data: requestData
   })
 }
 
-/**
- * 更新事项类型
- * @param {number} id - 事项类型ID
- * @param {object} data - 事项类型数据
- * @returns {Promise}
- */
 export function updateIssueItemType(id, data) {
   return request({
-    url: `/console/issue-item-type/${id}`,
+    url: `${api}/${id}`,
     method: 'put',
     data
   })
 }
 
-/**
- * 删除事项类型
- * @param {number} id - 事项类型ID
- * @returns {Promise}
- */
 export function deleteIssueItemType(id) {
   return request({
-    url: `/console/issue-item-type/${id}`,
+    url: `${api}/${id}`,
     method: 'delete'
   })
 }
 
-/**
- * 根据ID查询事项类型
- * @param {number} id - 事项类型ID
- * @returns {Promise}
- */
 export function getIssueItemTypeById(id) {
   return request({
-    url: `/console/issue-item-type/${id}`,
+    url: `${api}/${id}`,
     method: 'get'
   })
 }
 
-/**
- * 分页查询事项类型
- * @param {object} data - 查询参数
- * @returns {Promise}
- */
 export function getIssueItemTypePage(data) {
   return request({
-    url: '/console/issue-item-type/page',
+    url: `${api}/page`,
     method: 'post',
     data
   })

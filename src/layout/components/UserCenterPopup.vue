@@ -35,9 +35,9 @@
                 >
                   <div class="enterprise-icon">
                     <t-icon v-if="company.icon" :name="company.icon" size="20px" />
-                    <div v-else class="default-icon">{{ (company.companyName  || '企').charAt(0) }}</div>
+                    <div v-else class="default-icon">{{ (company.name || '企').charAt(0) }}</div>
                   </div>
-                  <span class="enterprise-name">{{ company.companyName  }}</span>
+                  <span class="enterprise-name">{{ company.name }}</span>
                   <t-icon v-if="company.isDefault" name="check" size="16px" class="check-icon" />
                 </div>
                 <div class="enterprise-item add-enterprise" @click="handleAddEnterprise">

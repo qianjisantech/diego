@@ -180,6 +180,12 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
+import {
+  createIssueItemType,
+  updateIssueItemType,
+  deleteIssueItemType,
+  getIssueItemTypePage
+} from '@/api/enterprise/issueItemType'
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -243,46 +249,21 @@ const getStatusText = (status) => {
 const handleSearch = async () => {
   loading.value = true
   try {
-    // 模拟查询数据
-    const mockData = [
-      {
-        id: 1,
-        name: 'Bug修复',
-        code: 'BUG',
-        departmentId: 1,
-        departmentName: '技术部',
-        sort: 1,
-        status: 'active',
-        description: '软件缺陷修复',
-        createTime: '2024-01-01 10:00:00'
-      },
-      {
-        id: 2,
-        name: '功能开发',
-        code: 'FEATURE',
-        departmentId: 1,
-        departmentName: '技术部',
-        sort: 2,
-        status: 'active',
-        description: '新功能开发',
-        createTime: '2024-01-02 11:00:00'
-      }
-    ]
-    
-    // 应用筛选
-    let filteredData = [...mockData]
-    if (filterForm.name) {
-      filteredData = filteredData.filter(item => item.name.includes(filterForm.name))
-    }
-    if (filterForm.code) {
-      filteredData = filteredData.filter(item => item.code.includes(filterForm.code))
-    }
-    if (filterForm.status) {
-      filteredData = filteredData.filter(item => item.status === filterForm.status)
+    const requestData = {
+      name: filterForm.name,
+      code: filterForm.code,
+      status: filterForm.status,
+      page: pagination.current,
+      size: pagination.pageSize
     }
     
-    itemTypesList.value = filteredData
-    pagination.total = filteredData.length
+    const response = await getIssueItemTypePage(requestData)
+    if (response.success) {
+      itemTypesList.value = response.data.records || []
+      pagination.total = response.data.total || 0
+    } else {
+      MessagePlugin.error(response.message || '查询失败')
+    }
   } catch (error) {
     console.error('查询失败:', error)
     MessagePlugin.error('查询失败')
@@ -327,9 +308,13 @@ const handleDelete = (row) => {
     title: '确认删除',
     onConfirm: async () => {
       try {
-        // 模拟删除
-        MessagePlugin.success('删除成功')
-        await handleSearch()
+        const response = await deleteIssueItemType(row.id)
+        if (response.success) {
+          MessagePlugin.success('删除成功')
+          await handleSearch()
+        } else {
+          MessagePlugin.error(response.message || '删除失败')
+        }
       } catch (error) {
         console.error('删除失败:', error)
         MessagePlugin.error('删除失败')
@@ -343,10 +328,20 @@ const handleSubmit = async () => {
   if (valid === true) {
     submitting.value = true
     try {
-      // 模拟提交
-      MessagePlugin.success(formData.id ? '更新成功' : '创建成功')
-      dialogVisible.value = false
-      await handleSearch()
+      let response
+      if (formData.id) {
+        response = await updateIssueItemType(formData.id, formData)
+      } else {
+        response = await createIssueItemType(formData)
+      }
+      
+      if (response.success) {
+        MessagePlugin.success(formData.id ? '更新成功' : '创建成功')
+        dialogVisible.value = false
+        await handleSearch()
+      } else {
+        MessagePlugin.error(response.message || '操作失败')
+      }
     } catch (error) {
       console.error('操作失败:', error)
       MessagePlugin.error('操作失败')

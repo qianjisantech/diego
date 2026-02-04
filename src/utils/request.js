@@ -2,6 +2,7 @@ import axios from 'axios'
 import { MessagePlugin } from 'tdesign-vue-next'
 import Cookies from 'js-cookie'
 import { useLoadingStore } from '@/store/loading'
+import { useUserStore } from '@/store/user'
 import { objectKeysToSnake, objectKeysToCamel } from './caseConverter'
 
 
@@ -110,17 +111,17 @@ request.interceptors.request.use(
     
     
     
-    // 如果是 /logs 接口，输出详细日志以便排查
-    if (config.url && (config.url.includes('/logs') || config.url.includes('/log'))) {
-      console.warn('⚠️ [HTTP请求] 检测到日志接口调用:', {
-        url: config.url,
-        method: config.method?.toUpperCase(),
-        params: config.params,
-        data: config.data,
-        fullUrl: config.baseURL + config.url,
-        stackTrace: new Error().stack
-      })
-    }
+    // // 如果是 /logs 接口，输出详细日志以便排查
+    // if (config.url && (config.url.includes('/logs') || config.url.includes('/log'))) {
+    //   console.warn('⚠️ [HTTP请求] 检测到日志接口调用:', {
+    //     url: config.url,
+    //     method: config.method?.toUpperCase(),
+    //     params: config.params,
+    //     data: config.data,
+    //     fullUrl: config.baseURL + config.url,
+    //     stackTrace: new Error().stack
+    //   })
+    // }
     
     // 显示组件级加载（优先级更高）
     if (config.componentLoading && config.loadingController) {
@@ -146,6 +147,16 @@ request.interceptors.request.use(
 
     // 设置IP请求头（即使是auto-detect，后端也会自动识别）
     config.headers['X-Client-IP'] = clientIP
+
+    // 添加企业ID到请求头
+    try {
+      const userStore = useUserStore()
+      if (userStore && userStore.selectedCompanyId) {
+        config.headers['X-Enterprise-ID'] = userStore.selectedCompanyId
+      }
+    } catch (e) {
+      console.warn('⚠️ 获取企业ID失败:', e.message)
+    }
 
     // 【关键配置】将请求参数从小驼峰转换为下划线
     // 处理 GET/DELETE 请求的 params 参数

@@ -24,17 +24,6 @@ export function logout() {
 
 
 
-/**
- * 发送邮箱验证码
- * @param {string} email - 邮箱地址
- */
-export function sendVerificationCode(email) {
-  return request({
-    url: '/auth-api/send-code',
-    method: 'post',
-    data: { email }
-  })
-}
 
 /**
  * 用户注册
@@ -45,7 +34,7 @@ export function sendVerificationCode(email) {
  */
 export function register(data) {
   return request({
-    url: '/auth-api/register',
+    url: AuthApi+'/auth/register',
     method: 'post',
     data
   })
